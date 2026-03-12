@@ -674,14 +674,14 @@ code,
 }
 
 .item-cc-input:focus, .item-phone-input:focus {
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--text-tertiary);
 }
 
 .item-cc-input {
   width: 2.2em;
   text-align: right;
-  color: var(--text-tertiary);
-  font-weight: 500;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .item-phone-input {
