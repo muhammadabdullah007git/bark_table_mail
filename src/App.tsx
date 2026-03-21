@@ -664,13 +664,19 @@ const App: React.FC = () => {
           </div>
         </div>
         <div className="sidebar-bottom">
-          <button className="icon-btn" onClick={() => { setShowHelp(true); setShowMobileSidebar(false); }} title="Setup Guide">
+          <button className={`icon-btn mobile-only ${showBulk ? 'active' : ''}`} onClick={() => { setShowBulk(!showBulk); setShowPreview(false); setShowWhatsAppList(false); setShowMailQueue(false); setShowMobileSidebar(false); }} title="Bulk Mode">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button className={`icon-btn mobile-only ${showPreview ? 'active' : ''}`} onClick={() => { setShowPreview(!showPreview); setShowBulk(false); setShowWhatsAppList(false); setShowMailQueue(false); setShowMobileSidebar(false); }} title="Preview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button className={`icon-btn ${showHelp ? 'active' : ''}`} onClick={() => { setShowHelp(!showHelp); setShowMobileSidebar(false); }} title="Setup Guide">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </button>
-          <button className={`icon-btn ${showLogs ? 'active' : ''}`} onClick={() => { setShowLogs(true); setShowMobileSidebar(false); }} title="Live Logs">
+          <button className={`icon-btn desktop-only ${showLogs ? 'active' : ''}`} onClick={() => { setShowLogs(!showLogs); setShowMobileSidebar(false); }} title="Live Logs">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           </button>
-          <button className="icon-btn" onClick={() => { setShowSettings(true); setShowMobileSidebar(false); }} title="Settings">
+          <button className={`icon-btn desktop-only ${showSettings ? 'active' : ''}`} onClick={() => { setShowSettings(!showSettings); setShowMobileSidebar(false); }} title="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
@@ -703,223 +709,250 @@ const App: React.FC = () => {
                 <span>Queue</span>
               </button>
             )}
-            <button className={`preview-toggle-btn ${bulkActive ? 'active' : ''}`} onClick={() => { setShowBulk(!showBulk); setShowPreview(false); setShowWhatsAppList(false); setShowMailQueue(false); }}>
+            <button className={`preview-toggle-btn desktop-only ${showBulk ? 'active' : ''}`} onClick={() => { setShowBulk(!showBulk); setShowPreview(false); setShowWhatsAppList(false); setShowMailQueue(false); }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               <span>Bulk</span>
             </button>
-            <button className={`preview-toggle-btn ${showPreview ? 'active' : ''}`} onClick={() => { setShowPreview(!showPreview); setShowBulk(false); setShowWhatsAppList(false); setShowMailQueue(false); }}>
+            <button className={`preview-toggle-btn desktop-only ${showPreview ? 'active' : ''}`} onClick={() => { setShowPreview(!showPreview); setShowBulk(false); setShowWhatsAppList(false); setShowMailQueue(false); }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <span>Preview</span>
             </button>
+            <button className={`preview-toggle-btn mobile-only ${showLogs ? 'active' : ''}`} onClick={() => { setShowLogs(!showLogs); setShowMobileSidebar(false); }} title="Live Logs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              <span>Logs</span>
+            </button>
+            <button className={`preview-toggle-btn mobile-only ${showSettings ? 'active' : ''}`} onClick={() => { setShowSettings(!showSettings); setShowMobileSidebar(false); }} title="Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span>Settings</span>
+            </button>
             <button className="send-btn" onClick={currentPlatform === 'whatsapp' ? handleGenerateWhatsApp : handleSend} disabled={sending}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale" style={{ marginRight: '8px' }}><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              <span>{sending ? 'Sending...' : (currentPlatform === 'whatsapp' ? 'Generate' : 'Send')}</span>
+              {sending ? (
+                <>
+                  <svg className="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                  <span>Sending...</span>
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale" style={{ marginRight: '8px' }}><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  <span>{currentPlatform === 'whatsapp' ? 'Generate' : 'Send'}</span>
+                </>
+              )}
             </button>
           </div>
         </header>
 
         <div className="editor-preview-layout">
           <form className="compose-form" onSubmit={currentPlatform === 'whatsapp' ? handleGenerateWhatsApp : handleSend}>
-              <div className="form-fields">
-                {currentPlatform === 'whatsapp' ? (
-                  <div className="input-row">
-                    <label>Phone</label>
-                    <div className="phone-input-group">
-                      <input 
-                        type="text" 
-                        className="country-code-input"
-                        placeholder="CC" 
-                        value={whatsappCountryCode} 
-                        onChange={e => setWhatsappCountryCode(e.target.value.replace(/\D/g, ''))} 
-                        title="Country Code"
-                      />
-                      <input 
-                        type="text" 
-                        placeholder="Phone numbers, {phone_col}" 
-                        value={to} 
-                        onChange={e => setTo(e.target.value)} 
-                        required 
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="input-row">
-                    <label>To</label>
+            <div className="form-fields">
+              {currentPlatform === 'whatsapp' ? (
+                <div className="input-row">
+                  <label>Phone</label>
+                  <div className="phone-input-group">
                     <input 
                       type="text" 
-                      placeholder="user1@example.com, {email_col}" 
+                      className="country-code-input"
+                      placeholder="CC" 
+                      value={whatsappCountryCode} 
+                      onChange={e => setWhatsappCountryCode(e.target.value.replace(/\D/g, ''))} 
+                      title="Country Code"
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Phone numbers, {phone_col}" 
                       value={to} 
                       onChange={e => setTo(e.target.value)} 
                       required 
                     />
                   </div>
-                )}
-                {currentPlatform !== 'whatsapp' && (
-                  <>
-                    <div className="input-row"><label>Cc</label><input type="text" placeholder="cc1@example.com, {cc_col}" value={cc} onChange={e => setCc(e.target.value)} /></div>
-                    <div className="input-row"><label>Bcc</label><input type="text" placeholder="bcc1@example.com, {bcc_col}" value={bcc} onChange={e => setBcc(e.target.value)} /></div>
-                    <div className="input-row"><label>Subject</label><input type="text" placeholder="Subject {name}" value={subject} onChange={e => setSubject(e.target.value)} required /></div>
-                  </>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="input-row">
+                  <label>To</label>
+                  <input 
+                    type="text" 
+                    placeholder="user1@example.com, {email_col}" 
+                    value={to} 
+                    onChange={e => setTo(e.target.value)} 
+                    required 
+                  />
+                </div>
+              )}
+              {currentPlatform !== 'whatsapp' && (
+                <>
+                  <div className="input-row"><label>Cc</label><input type="text" placeholder="cc1@example.com, {cc_col}" value={cc} onChange={e => setCc(e.target.value)} /></div>
+                  <div className="input-row"><label>Bcc</label><input type="text" placeholder="bcc1@example.com, {bcc_col}" value={bcc} onChange={e => setBcc(e.target.value)} /></div>
+                  <div className="input-row"><label>Subject</label><input type="text" placeholder="Subject {name}" value={subject} onChange={e => setSubject(e.target.value)} required /></div>
+                </>
+              )}
+            </div>
 
-              <div className="editor-container">
-                {currentPlatform !== 'whatsapp' ? (
-                  <>
-                    <div className="formatting-toolbar">
-                      <div className="mode-toggle">
-                        <button type="button" className={!isSourceMode ? 'active' : ''} onMouseDown={(e) => { e.preventDefault(); toggleSourceMode(false); }} title="Text Mode">Text</button>
-                        <button type="button" className={isSourceMode ? 'active' : ''} onMouseDown={(e) => { e.preventDefault(); toggleSourceMode(true); }} title="HTML Mode">HTML</button>
-                      </div>
-                      <div className="toolbar-divider"></div>
-                      {!isSourceMode && (
-                        <div className="toolbar-actions">
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('bold'); }} title="Bold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('italic'); }} title="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('underline'); }} title="Underline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('strikeThrough'); }} title="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="5" y1="12" x2="19" y2="12"/><path d="M16 6C16 6 14.5 4 12 4C9.5 4 8 6 8 6"/><path d="M8 18C8 18 9.5 20 12 20C14.5 20 16 18 16 18"/></svg></button>
-                          <div className="toolbar-divider"></div>
-                          <div className="toolbar-select-wrapper font-family-select"><select onChange={(e) => execCmd('fontName', e.target.value)} defaultValue="JetBrains Mono" title="Font Family">
-                            <option value="JetBrains Mono">JetBrains Mono</option><option value="Inter">Inter</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option>
-                          </select></div>
-                          <div className="toolbar-select-wrapper"><select onChange={(e) => execCmd('fontSize', e.target.value)} defaultValue="3" title="Font Size">
-                            <option value="1">X-Small</option>
-                            <option value="2">Small</option>
-                            <option value="3">Normal</option>
-                            <option value="4">Medium</option>
-                            <option value="5">Large</option>
-                            <option value="6">X-Large</option>
-                            <option value="7">Huge</option>
-                          </select></div>
-                          <div className="color-picker-wrapper" title="Text Color"><input type="color" onInput={(e) => { execCmd('foreColor', e.currentTarget.value); e.currentTarget.value = '#ffffff'; }} defaultValue="#ffffff" /><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="m19 21-7-7-7 7"/><path d="M12 14V3"/></svg></div>
-                          <div className="toolbar-divider"></div>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('justifyLeft'); }} title="Align Left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('justifyCenter'); }} title="Align Center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('justifyRight'); }} title="Align Right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg></button>
-                          <div className="toolbar-divider"></div>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('insertUnorderedList'); }} title="Bullet List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('insertOrderedList'); }} title="Numbered List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="10" cy="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
-                          <div className="toolbar-divider"></div>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('formatBlock', 'blockquote'); }} title="Block Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('fontName', 'JetBrains Mono'); }} title="Monospace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapInTag('code'); }} title="Inline Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg></button>
-                          <div className="toolbar-divider"></div>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('outdent'); }} title="Decrease Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><polyline points="7 8 3 12 7 16"/><line x1="21" y1="12" x2="11" y2="12"/><line x1="21" y1="6" x2="11" y2="6"/><line x1="21" y1="18" x2="11" y2="18"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('indent'); }} title="Increase Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="13" y2="12"/><line x1="3" y1="6" x2="13" y2="6"/><line x1="3" y1="18" x2="13" y2="18"/></svg></button>
-                          <div className="toolbar-divider"></div>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); handleLinkClick(); }} title="Insert Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('removeFormat'); }} title="Clear Formatting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/><path d="M4 20h16"/></svg></button>
-                        </div>
-                      )}
-
+            <div className="editor-container">
+              {currentPlatform !== 'whatsapp' ? (
+                <>
+                  <div className="formatting-toolbar">
+                    <div className="mode-toggle">
+                      <button type="button" className={!isSourceMode ? 'active' : ''} onMouseDown={(e) => { e.preventDefault(); toggleSourceMode(false); }} title="Text Mode">Text</button>
+                      <button type="button" className={isSourceMode ? 'active' : ''} onMouseDown={(e) => { e.preventDefault(); toggleSourceMode(true); }} title="HTML Mode">HTML</button>
                     </div>
-                    {!isSourceMode ? (
-                      <div className="rich-editor" contentEditable={true} ref={editorRef} onInput={updateBody} onBlur={updateBody} data-placeholder="Start typing..." />
-                    ) : (
-                      <textarea className="source-editor" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Enter raw HTML here..." />
-                    )}
-                  </>
-                ) : (
-                  <div className="whatsapp-editor-wrapper">
-                    <div className="formatting-toolbar whatsapp-toolbar">
+                    <div className="toolbar-divider"></div>
+                    {!isSourceMode && (
                       <div className="toolbar-actions">
-                        <button type="button" onClick={() => insertWhatsAppFormatting('*')} title="Bold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
-                        <button type="button" onClick={() => insertWhatsAppFormatting('_')} title="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
-                        <button type="button" onClick={() => insertWhatsAppFormatting('~')} title="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="5" y1="12" x2="19" y2="12"/><path d="M16 6C16 6 14.5 4 12 4C9.5 4 8 6 8 6"/><path d="M8 18C8 18 9.5 20 12 20C14.5 20 16 18 16 18"/></svg></button>
-                        <button type="button" onClick={() => insertWhatsAppFormatting('```')} title="Monospace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
-                        <button type="button" onClick={() => insertWhatsAppFormatting('`')} title="Inline Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg></button>
-                        <button type="button" onClick={() => insertWhatsAppFormatting('> ')} title="Block Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('bold'); }} title="Bold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('italic'); }} title="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('underline'); }} title="Underline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('strikeThrough'); }} title="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="5" y1="12" x2="19" y2="12"/><path d="M16 6C16 6 14.5 4 12 4C9.5 4 8 6 8 6"/><path d="M8 18C8 18 9.5 20 12 20C14.5 20 16 18 16 18"/></svg></button>
+                        <div className="toolbar-divider"></div>
+                        <div className="toolbar-select-wrapper font-family-select"><select onChange={(e) => execCmd('fontName', e.target.value)} defaultValue="JetBrains Mono" title="Font Family">
+                          <option value="JetBrains Mono">JetBrains Mono</option><option value="Inter">Inter</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option>
+                        </select></div>
+                        <div className="toolbar-select-wrapper"><select onChange={(e) => execCmd('fontSize', e.target.value)} defaultValue="3" title="Font Size">
+                          <option value="1">X-Small</option>
+                          <option value="2">Small</option>
+                          <option value="3">Normal</option>
+                          <option value="4">Medium</option>
+                          <option value="5">Large</option>
+                          <option value="6">X-Large</option>
+                          <option value="7">Huge</option>
+                        </select></div>
+                        <div className="color-picker-wrapper" title="Text Color"><input type="color" onInput={(e) => { execCmd('foreColor', e.currentTarget.value); e.currentTarget.value = '#ffffff'; }} defaultValue="#ffffff" /><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="m19 21-7-7-7 7"/><path d="M12 14V3"/></svg></div>
+                        <div className="toolbar-divider"></div>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('justifyLeft'); }} title="Align Left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('justifyCenter'); }} title="Align Center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('justifyRight'); }} title="Align Right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg></button>
+                        <div className="toolbar-divider"></div>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('insertUnorderedList'); }} title="Bullet List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('insertOrderedList'); }} title="Numbered List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="10" cy="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+                        <div className="toolbar-divider"></div>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('formatBlock', 'blockquote'); }} title="Block Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('fontName', 'JetBrains Mono'); }} title="Monospace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapInTag('code'); }} title="Inline Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg></button>
+                        <div className="toolbar-divider"></div>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('outdent'); }} title="Decrease Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><polyline points="7 8 3 12 7 16"/><line x1="21" y1="12" x2="11" y2="12"/><line x1="21" y1="6" x2="11" y2="6"/><line x1="21" y1="18" x2="11" y2="18"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('indent'); }} title="Increase Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="13" y2="12"/><line x1="3" y1="6" x2="13" y2="6"/><line x1="3" y1="18" x2="13" y2="18"/></svg></button>
+                        <div className="toolbar-divider"></div>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); handleLinkClick(); }} title="Insert Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); execCmd('removeFormat'); }} title="Clear Formatting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/><path d="M4 20h16"/></svg></button>
                       </div>
+                    )}
+
+                  </div>
+                  {!isSourceMode ? (
+                    <div className="rich-editor" contentEditable={true} ref={editorRef} onInput={updateBody} onBlur={updateBody} data-placeholder="Start typing..." />
+                  ) : (
+                    <textarea className="source-editor" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Enter raw HTML here..." />
+                  )}
+                </>
+              ) : (
+                <div className="whatsapp-editor-wrapper">
+                  <div className="formatting-toolbar whatsapp-toolbar">
+                    <div className="toolbar-actions">
+                      <button type="button" onClick={() => insertWhatsAppFormatting('*')} title="Bold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
+                      <button type="button" onClick={() => insertWhatsAppFormatting('_')} title="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+                      <button type="button" onClick={() => insertWhatsAppFormatting('~')} title="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="5" y1="12" x2="19" y2="12"/><path d="M16 6C16 6 14.5 4 12 4C9.5 4 8 6 8 6"/><path d="M8 18C8 18 9.5 20 12 20C14.5 20 16 18 16 18"/></svg></button>
+                      <button type="button" onClick={() => insertWhatsAppFormatting('```')} title="Monospace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+                      <button type="button" onClick={() => insertWhatsAppFormatting('`')} title="Inline Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg></button>
+                      <button type="button" onClick={() => insertWhatsAppFormatting('> ')} title="Block Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
                     </div>
-                    <textarea 
-                      className="whatsapp-editor" 
-                      ref={whatsappTextareaRef}
-                      value={body} 
-                      onChange={(e) => setBody(e.target.value)} 
-                      placeholder="Type your WhatsApp message... Use toolbar for formatting" 
-                    />
+                  </div>
+                  <textarea 
+                    className="whatsapp-editor" 
+                    ref={whatsappTextareaRef}
+                    value={body} 
+                    onChange={(e) => setBody(e.target.value)} 
+                    placeholder="Type your WhatsApp message... Use toolbar for formatting" 
+                  />
+                </div>
+              )}
+            </div>
+
+            {currentPlatform !== 'whatsapp' && (
+              <div 
+                className={`attachment-box ${isDragging ? 'dragging' : ''}`} 
+                onClick={() => attachmentInputRef.current?.click()}
+              >
+                <input 
+                  type="file" 
+                  multiple 
+                  ref={attachmentInputRef} 
+                  style={{ display: 'none' }} 
+                  onChange={(e) => { handleFile(e.target.files); e.target.value = ''; }} 
+                />
+                {attachments.length === 0 ? (
+                  <div className="attachment-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>Click or drag and drop files here to attach</span>
+                  </div>
+                ) : (
+                  <div className="attachment-grid">
+                    {attachments.map((file, index) => (
+                      <div key={index} className="attachment-chip" onClick={(e) => e.stopPropagation()}>
+                        <span className="file-name">{file.name}</span>
+                        <button type="button" className="remove-btn" onClick={(e) => { e.stopPropagation(); removeAttachment(index); }}>&times;</button>
+                      </div>
+                    ))}
+                    <div className="add-more" onClick={(e) => { e.stopPropagation(); attachmentInputRef.current?.click(); }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </div>
                   </div>
                 )}
               </div>
-
-              {currentPlatform !== 'whatsapp' && (
-                <div 
-                  className={`attachment-box ${isDragging ? 'dragging' : ''}`} 
-                  onClick={() => attachmentInputRef.current?.click()}
-                >
-                  <input 
-                    type="file" 
-                    multiple 
-                    ref={attachmentInputRef} 
-                    style={{ display: 'none' }} 
-                    onChange={(e) => { handleFile(e.target.files); e.target.value = ''; }} 
-                  />
-                  {attachments.length === 0 ? (
-                    <div className="attachment-placeholder">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                      <span>Click or drag and drop files here to attach</span>
-                    </div>
-                  ) : (
-                    <div className="attachment-grid">
-                      {attachments.map((file, index) => (
-                        <div key={index} className="attachment-chip" onClick={(e) => e.stopPropagation()}>
-                          <span className="file-name">{file.name}</span>
-                          <button type="button" className="remove-btn" onClick={(e) => { e.stopPropagation(); removeAttachment(index); }}>&times;</button>
-                        </div>
-                      ))}
-                      <div className="add-more" onClick={(e) => { e.stopPropagation(); attachmentInputRef.current?.click(); }}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </form>
+            )}
+          </form>
 
           {(showPreview || showBulk || showWhatsAppList || showMailQueue) && (
-              <>
-                <div className={`resizer-handle ${isResizing ? 'active' : ''}`} onMouseDown={startResizing} />
-                <aside className="preview-panel" style={{ width: `${sidePanelWidth}px` }}>
-                  {currentPlatform === 'gmail' && showMailQueue ? (
-                    <>
-                      <div className="preview-header">
-                        <span>Mail Queue</span>
-                        <div className="queue-global-actions">
-                          <button className={`icon-btn small ${isMailPaused ? 'active' : ''}`} onClick={toggleGlobalPause} title={isMailPaused ? 'Resume All' : 'Pause All'}>
-                            {isMailPaused ? <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>}
-                          </button>
-                          <button className="icon-btn small danger" onClick={cancelGlobalSending} title="Cancel All">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                          </button>
-                          <button className="close-btn" onClick={() => setShowMailQueue(false)}><CloseIcon /></button>
-                        </div>
+            <>
+              <div className={`resizer-handle ${isResizing ? 'active' : ''}`} onMouseDown={startResizing} />
+              <aside className="preview-panel" style={{ width: `${sidePanelWidth}px` }}>
+                {currentPlatform === 'gmail' && showMailQueue ? (
+                  <>
+                    <div className="preview-header">
+                      <span>Mail Queue</span>
+                      <div className="queue-global-actions">
+                        <button className={`icon-btn small ${isMailPaused ? 'active' : ''}`} onClick={toggleGlobalPause} title={isMailPaused ? 'Resume All' : 'Pause All'}>
+                          {isMailPaused ? <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>}
+                        </button>
+                        <button className="icon-btn small danger" onClick={cancelGlobalSending} title="Cancel All">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        </button>
+                        <button className="close-btn" onClick={() => setShowMailQueue(false)}><CloseIcon /></button>
                       </div>
-                      <div className="mail-queue-container">
-                        {mailQueue.map((item) => (
-                          <div key={item.id} className={`queue-item ${item.status}`}>
-                            <div className="queue-item-info">
-                              <div className="to">{item.to}</div>
-                              <div className="subject">{item.subject}</div>
-                              {item.error && <div className="error-msg">{item.error}</div>}
-                            </div>
-                            <div className="queue-item-status">
-                              <span className={`status-badge ${item.status}`}>{item.status}</span>
-                              {(item.status === 'pending' || item.status === 'paused' || item.status === 'sending') && (
-                                <div className="item-actions">
-                                  <button className="icon-btn xs" onClick={() => toggleItemPause(item.id)}>
-                                    {item.status === 'paused' ? <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> : <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>}
-                                  </button>
-                                  <button className="icon-btn xs danger" onClick={() => cancelItem(item.id)}>
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                    </div>
+                    <div className="mail-queue-container">
+                      {mailQueue.map((item) => (
+                        <div key={item.id} className={`queue-item ${item.status}`}>
+                          <div className="queue-item-info">
+                            <div className="to">{item.to}</div>
+                            <div className="subject">{item.subject}</div>
+                            {item.error && <div className="error-msg">{item.error}</div>}
                           </div>
-                        ))}
-                      </div>
-                    </>
-                  ) : currentPlatform === 'whatsapp' && showWhatsAppList ? (
+                          <div className="queue-item-status">
+                            <span className={`status-badge ${item.status}`}>
+                              {item.status === 'success' ? (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                              ) : item.status === 'error' ? (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                              ) : item.status === 'sending' ? (
+                                <svg className="spinner" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                              ) : (
+                                item.status
+                              )}
+                            </span>
+                            {(item.status === 'pending' || item.status === 'paused' || item.status === 'sending') && (
+                              <div className="item-actions">
+                                <button className="icon-btn xs" onClick={() => toggleItemPause(item.id)}>
+                                  {item.status === 'paused' ? <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> : <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>}
+                                </button>
+                                <button className="icon-btn xs danger" onClick={() => cancelItem(item.id)}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : currentPlatform === 'whatsapp' && showWhatsAppList ? (
                   <>
                     <div className="preview-header">
                       <span>WhatsApp Queue</span>
@@ -929,178 +962,182 @@ const App: React.FC = () => {
                       </div>
                     </div>
                     <div className="whatsapp-list-container">
-                        {generatedWhatsAppItems.length === 0 ? (
-                          <div className="logs-empty">No messages generated yet. Click "Generate" to start.</div>
-                        ) : (
-                          <div className="whatsapp-items-list">
-                            {generatedWhatsAppItems.map((item) => (
-                              <div key={item.id} className={`whatsapp-item ${item.sent ? 'sent' : ''}`}>
-                                <div className="whatsapp-item-info">
-                                  <div className="whatsapp-item-edit-group">
-                                    <input 
-                                      className="item-cc-input" 
-                                      value={item.cc} 
-                                      onChange={e => updateWhatsAppItem(item.id, 'cc', e.target.value.replace(/\D/g, ''))} 
-                                    />
-                                    <input 
-                                      className="item-phone-input" 
-                                      value={item.phone} 
-                                      onChange={e => updateWhatsAppItem(item.id, 'phone', e.target.value.replace(/\D/g, ''))} 
-                                    />
-                                  </div>
-                                  <span className="text-preview">{item.text.substring(0, 60)}...</span>
+                      {generatedWhatsAppItems.length === 0 ? (
+                        <div className="logs-empty">No messages generated yet. Click "Generate" to start.</div>
+                      ) : (
+                        <div className="whatsapp-items-list">
+                          {generatedWhatsAppItems.map((item) => (
+                            <div key={item.id} className={`whatsapp-item ${item.sent ? 'sent' : ''}`}>
+                              <div className="whatsapp-item-info">
+                                <div className="whatsapp-item-edit-group">
+                                  <input 
+                                    className="item-cc-input" 
+                                    value={item.cc} 
+                                    onChange={e => updateWhatsAppItem(item.id, 'cc', e.target.value.replace(/\D/g, ''))} 
+                                  />
+                                  <input 
+                                    className="item-phone-input" 
+                                    value={item.phone} 
+                                    onChange={e => updateWhatsAppItem(item.id, 'phone', e.target.value.replace(/\D/g, ''))} 
+                                  />
                                 </div>
-                                <button className="send-single-btn" onClick={() => sendWhatsAppSingle(item)}>
-                                  {item.sent ? 'Resend' : 'Send'}
-                                </button>
+                                <span className="text-preview">{item.text.substring(0, 60)}...</span>
+                              </div>
+                              <button className="send-single-btn" onClick={() => sendWhatsAppSingle(item)}>
+                                {item.sent ? 'Resend' : 'Send'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : showPreview ? (
+                  <>
+                    <div className="preview-header">
+                      <span>Live Preview</span>
+                      <button className="close-btn" onClick={() => setShowPreview(false)}><CloseIcon /></button>
+                    </div>
+                    <div className="preview-body">
+                      <div className="preview-paper">
+                        <div className="preview-metadata">
+                          {currentPlatform === 'gmail' && <div><strong>Subject:</strong> {subject || '(No Subject)'}</div>}
+                          <div><strong>To:</strong> {to || '(No Recipient)'}</div>
+                        </div>
+                        <hr className="preview-divider" />
+                        <div 
+                          className="preview-content" 
+                          dangerouslySetInnerHTML={{ 
+                            __html: currentPlatform === 'whatsapp' ? formatWhatsAppPreview(body) : (body || '...') 
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : showBulk ? (
+                  <>
+                    <div className="preview-header">
+                      <span>Bulk Configuration</span>
+                      <button className="close-btn" onClick={() => setShowBulk(false)}><CloseIcon /></button>
+                    </div>
+                    <div className="bulk-panel-body">
+                      <div className="bulk-section">
+                        <div className="bulk-toggle-inline" onClick={() => setBulkActive(!bulkActive)}>
+                          <div className="checkbox-wrapper">
+                            <div className={`checkbox ${bulkActive ? 'checked' : ''}`} />
+                          </div>
+                          <label>Enable Bulk Mode</label>
+                        </div>
+                      </div>
+                      <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
+                        <div className="bulk-section-header">
+                          <label>Data Source</label>
+                          {bulkFile && <span className="bulk-badge">{bulkData.length} Records</span>}
+                        </div>
+                        <div className={`bulk-drop-zone ${bulkFile ? 'has-file' : ''}`} onClick={() => bulkFileInputRef.current?.click()} onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('dragging'); }} onDragLeave={(e) => e.currentTarget.classList.remove('dragging')} onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove('dragging'); if (e.dataTransfer.files?.[0]) processFile(e.dataTransfer.files[0]); }}>
+                          <input type="file" ref={bulkFileInputRef} accept=".csv,.xlsx,.xls" onChange={(e) => { if (e.target.files?.[0]) { processFile(e.target.files[0]); e.target.value = ''; } }} style={{ display: 'none' }} />
+                          {bulkFile ? (
+                            <div className="file-info">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="no-scale"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              <div className="text"><span className="name">{bulkFile.name}</span></div>
+                              <button className="secondary-btn small" onClick={(e) => { e.stopPropagation(); setBulkFile(null); setBulkData([]); }}>Change</button>
+                            </div>
+                          ) : (
+                            <div className="upload-prompt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Click or drag CSV/Excel file</span></div>
+                          )}
+                        </div>
+                      </div>
+                      {bulkColumns.length > 0 && detectedVariables.length > 0 && (
+                        <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
+                          <label>Variable Mapping</label>
+                          <div className="mapping-container">
+                            {detectedVariables.map(v => (
+                              <div className="mapping-item" key={v}>
+                                <div className="var-label"><code>{`{${v}}`}</code></div>
+                                <div className="mapping-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="no-scale"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                                <select className="col-select" value={variableMapping[v] || ''} onChange={e => setBulkMapping(prev => ({ ...prev, [v]: e.target.value }))}>
+                                  <option value="">Select Column...</option>
+                                  {bulkColumns.map(col => <option key={col} value={col}>{col}</option>)}
+                                </select>
                               </div>
                             ))}
                           </div>
-                        )}
-                      </div>
-                    </>
-                  ) : showPreview ? (
-                    <>
-                      <div className="preview-header">
-                        <span>Live Preview</span>
-                        <button className="close-btn" onClick={() => setShowPreview(false)}><CloseIcon /></button>
-                      </div>
-                      <div className="preview-body">
-                        <div className="preview-paper">
-                          <div className="preview-metadata">
-                            {currentPlatform === 'gmail' && <div><strong>Subject:</strong> {subject || '(No Subject)'}</div>}
-                            <div><strong>To:</strong> {to || '(No Recipient)'}</div>
-                          </div>
-                          <hr className="preview-divider" />
-                          <div 
-                            className="preview-content" 
-                            dangerouslySetInnerHTML={{ 
-                              __html: currentPlatform === 'whatsapp' ? formatWhatsAppPreview(body) : (body || '...') 
-                            }} 
-                          />
                         </div>
-                      </div>
-                    </>
-
-                  ) : (
-                    <>
-                      <div className="preview-header">
-                        <span>Bulk Configuration</span>
-                        <button className="close-btn" onClick={() => setShowBulk(false)}><CloseIcon /></button>
-                      </div>
-                        <div className="bulk-panel-body">
-                          <div className="bulk-section">
-                            <div className="bulk-toggle-inline" onClick={() => setBulkActive(!bulkActive)}>
-                              <div className="checkbox-wrapper">
-                                <div className={`checkbox ${bulkActive ? 'checked' : ''}`} />
-                              </div>
-                              <label>Enable Bulk Mode</label>
-                              </div>
-
+                      )}
+                      <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
+                        <label>Mailing Strategy</label>
+                        <div className="count-control">
+                          <div className="mode-toggle">
+                            <button type="button" className={mailCountMode === 'auto' ? 'active' : ''} onClick={() => setMailCountMode('auto')}>Auto</button>
+                            <button type="button" className={mailCountMode === 'fixed' ? 'active' : ''} onClick={() => setMailCountMode('fixed')}>Range</button>
+                            <button type="button" className={mailCountMode === 'manual' ? 'active' : ''} onClick={() => setMailCountMode('manual')}>Selective</button>
                           </div>
-                          <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
-                            <div className="bulk-section-header">
-                              <label>Data Source</label>
-                              {bulkFile && <span className="bulk-badge">{bulkData.length} Records</span>}
-                            </div>
-                            <div className={`bulk-drop-zone ${bulkFile ? 'has-file' : ''}`} onClick={() => bulkFileInputRef.current?.click()} onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('dragging'); }} onDragLeave={(e) => e.currentTarget.classList.remove('dragging')} onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove('dragging'); if (e.dataTransfer.files?.[0]) processFile(e.dataTransfer.files[0]); }}>
-                              <input type="file" ref={bulkFileInputRef} accept=".csv,.xlsx,.xls" onChange={(e) => { if (e.target.files?.[0]) { processFile(e.target.files[0]); e.target.value = ''; } }} style={{ display: 'none' }} />
-                              {bulkFile ? (
-                                <div className="file-info">
-                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="no-scale"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                  <div className="text"><span className="name">{bulkFile.name}</span></div>
-                                  <button className="secondary-btn small" onClick={(e) => { e.stopPropagation(); setBulkFile(null); setBulkData([]); }}>Change</button>
-                                </div>
-                              ) : (
-                                <div className="upload-prompt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Click or drag CSV/Excel file</span></div>
-                              )}
-                            </div>
-                          </div>
-                          {bulkColumns.length > 0 && detectedVariables.length > 0 && (
-                            <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
-                              <label>Variable Mapping</label>
-                              <div className="mapping-container">
-                                {detectedVariables.map(v => (
-                                  <div className="mapping-item" key={v}>
-                                    <div className="var-label"><code>{`{${v}}`}</code></div>
-                                    <div className="mapping-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="no-scale"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-                                    <select className="col-select" value={variableMapping[v] || ''} onChange={e => setBulkMapping(prev => ({ ...prev, [v]: e.target.value }))}>
-                                      <option value="">Select Column...</option>
-                                      {bulkColumns.map(col => <option key={col} value={col}>{col}</option>)}
-                                    </select>
-                                  </div>
-                                ))}
+                          {mailCountMode === 'fixed' && (
+                            <div className="range-inputs">
+                              <div className="fixed-input-wrapper">
+                                <span className="label">From</span>
+                                <input type="number" value={fixedMailRange.from} onChange={e => setFixedMailRange(prev => ({ ...prev, from: parseInt(e.target.value) || 1 }))} min="1" max={bulkData.length} />
+                              </div>
+                              <div className="fixed-input-wrapper">
+                                <span className="label">To</span>
+                                <input type="number" value={fixedMailRange.to} onChange={e => setFixedMailRange(prev => ({ ...prev, to: parseInt(e.target.value) || 1 }))} min="1" max={bulkData.length} />
                               </div>
                             </div>
                           )}
-                          <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
-                            <label>Mailing Strategy</label>
-                            <div className="count-control">
-                              <div className="mode-toggle">
-                                <button type="button" className={mailCountMode === 'auto' ? 'active' : ''} onClick={() => setMailCountMode('auto')}>Auto</button>
-                                <button type="button" className={mailCountMode === 'fixed' ? 'active' : ''} onClick={() => setMailCountMode('fixed')}>Range</button>
-                                <button type="button" className={mailCountMode === 'manual' ? 'active' : ''} onClick={() => setMailCountMode('manual')}>Selective</button>
+                          {mailCountMode === 'manual' && (
+                            <div className="manual-selection-container">
+                              <div className="manual-header">
+                                <div className="search-box">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="no-scale"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                  <input type="text" placeholder="Search records..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                                </div>
+                                <button type="button" className="select-all-btn" onClick={toggleAll}>
+                                  {selectedIndices.size === bulkData.length ? 'Deselect All' : 'Select All'}
+                                </button>
                               </div>
-                              {mailCountMode === 'fixed' && (
-                                <div className="range-inputs">
-                                  <div className="fixed-input-wrapper">
-                                    <span className="label">From</span>
-                                    <input type="number" value={fixedMailRange.from} onChange={e => setFixedMailRange(prev => ({ ...prev, from: parseInt(e.target.value) || 1 }))} min="1" max={bulkData.length} />
-                                  </div>
-                                  <div className="fixed-input-wrapper">
-                                    <span className="label">To</span>
-                                    <input type="number" value={fixedMailRange.to} onChange={e => setFixedMailRange(prev => ({ ...prev, to: parseInt(e.target.value) || 1 }))} min="1" max={bulkData.length} />
-                                  </div>
-                                </div>
-                              )}
-                              {mailCountMode === 'manual' && (
-                                <div className="manual-selection-container">
-                                  <div className="manual-header">
-                                    <div className="search-box">
-                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="no-scale"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                                      <input type="text" placeholder="Search records..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                              <div className="row-list">
+                                {bulkData.map((row, i) => {
+                                  const rowText = Object.values(row).join(' ').toLowerCase();
+                                  if (searchTerm && !rowText.includes(searchTerm.toLowerCase())) return null;
+                                  return (
+                                    <div key={i} className={`selectable-row ${selectedIndices.has(i) ? 'selected' : ''}`} onClick={() => toggleIndex(i)}>
+                                      <div className="checkbox-wrapper">
+                                        <div className={`checkbox ${selectedIndices.has(i) ? 'checked' : ''}`} />
+                                      </div>
+                                      <div className="row-preview">
+                                        {Object.values(row).slice(0, 3).map((val: any, idx) => (
+                                          <span key={idx} className="cell-preview">{String(val)}</span>
+                                        ))}
+                                      </div>
                                     </div>
-                                    <button type="button" className="select-all-btn" onClick={toggleAll}>
-                                      {selectedIndices.size === bulkData.length ? 'Deselect All' : 'Select All'}
-                                    </button>
-                                  </div>
-                                  <div className="row-list">
-                                    {bulkData.map((row, i) => {
-                                      const rowText = Object.values(row).join(' ').toLowerCase();
-                                      if (searchTerm && !rowText.includes(searchTerm.toLowerCase())) return null;
-                                      return (
-                                        <div key={i} className={`selectable-row ${selectedIndices.has(i) ? 'selected' : ''}`} onClick={() => toggleIndex(i)}>
-                                          <div className="checkbox-wrapper">
-                                            <div className={`checkbox ${selectedIndices.has(i) ? 'checked' : ''}`} />
-                                          </div>
-                                          <div className="row-preview">
-                                            {Object.values(row).slice(0, 3).map((val: any, idx) => (
-                                              <span key={idx} className="cell-preview">{String(val)}</span>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
+                                  );
+                                })}
+                              </div>
                             </div>
-                            <p className="hint">
-                              {mailCountMode === 'auto' && `Will send to all ${bulkData.length} records.`}
-                              {mailCountMode === 'fixed' && `Will send records ${fixedMailRange.from} to ${fixedMailRange.to} (${Math.max(0, fixedMailRange.to - fixedMailRange.from + 1)} total).`}
-                              {mailCountMode === 'manual' && `${selectedIndices.size} of ${bulkData.length} records selected.`}
-                            </p>
-                          </div>
+                          )}
                         </div>
-                    </>
-                  )}
-                </aside>
-              </>
-            )}
+                        <p className="hint">
+                          {mailCountMode === 'auto' && `Will send to all ${bulkData.length} records.`}
+                          {mailCountMode === 'fixed' && `Will send records ${fixedMailRange.from} to ${fixedMailRange.to} (${Math.max(0, fixedMailRange.to - fixedMailRange.from + 1)} total).`}
+                          {mailCountMode === 'manual' && `${selectedIndices.size} of ${bulkData.length} records selected.`}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+              </aside>
+            </>
+          )}
         </div>
       </main>
 
-      {notification && (<div className={`notification-toast ${notification.type}`}>{notification.message}</div>)}
+      {notification && (
+        <div className={`notification-toast ${notification.type}`}>
+          {notification.type === 'success' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+          {notification.type === 'error' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>}
+          <span>{notification.message}</span>
+        </div>
+      )}
 
       {showSettings && (
         <div className="modal-overlay" onClick={() => setShowSettings(false)}>
@@ -1194,11 +1231,25 @@ const App: React.FC = () => {
       )}
 
       {linkDialog.show && (
-        <div className="modal-overlay" onClick={() => setLinkDialog({ show: false, url: '', range: null })}><div className="modal-content small" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setLinkDialog({ show: false, url: '', range: null })}>
+          <div className="modal-content small" onClick={e => e.stopPropagation()}>
             <div className="modal-header"><h3>Insert Link</h3><button className="close-btn" onClick={() => setLinkDialog({ show: false, url: '', range: null })}><CloseIcon /></button></div>
-            <form onSubmit={applyLink}><div className="settings-group"><label>URL</label><div className="url-input-container"><input type="url" value={linkDialog.url} onChange={e => setLinkDialog(prev => ({ ...prev, url: e.target.value }))} required autoFocus /></div></div><div className="modal-actions"><button type="button" className="secondary-btn" onClick={() => setLinkDialog({ show: false, url: '', range: null })}>Cancel</button><button type="submit" className="primary-btn">Insert</button></div></form>
-          </div></div>
+            <form onSubmit={applyLink}>
+              <div className="settings-group">
+                <label>URL</label>
+                <div className="url-input-container">
+                  <input type="url" value={linkDialog.url} onChange={e => setLinkDialog(prev => ({ ...prev, url: e.target.value }))} required autoFocus />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="secondary-btn" onClick={() => setLinkDialog({ show: false, url: '', range: null })}>Cancel</button>
+                <button type="submit" className="primary-btn">Insert</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
+
       {showLogs && (
         <div className="modal-overlay" onClick={() => setShowLogs(false)}>
           <div className="modal-content large" onClick={e => e.stopPropagation()}>
@@ -1217,7 +1268,11 @@ const App: React.FC = () => {
                   {logs.map((log, i) => (
                     <div key={i} className={`log-item ${log.type}`}>
                       <span className="log-time">[{log.timestamp}]</span>
-                      <span className="log-message">{log.message}</span>
+                      <span className="log-message">
+                        {log.type === 'success' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', verticalAlign: 'middle' }}><polyline points="20 6 9 17 4 12" /></svg>}
+                        {log.type === 'error' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', verticalAlign: 'middle' }}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>}
+                        {log.message}
+                      </span>
                     </div>
                   ))}
                 </div>
