@@ -329,12 +329,11 @@ code,
 }
 
 .country-code-input {
-  width: 12em !important;
+  width: 4.5em !important;
   flex: none !important;
-  text-align: left;
+  text-align: center;
   border-right: 1px solid var(--border) !important;
-  padding-right: 0.8em !important;
-  padding-left: 0.8em !important;
+  padding: 0 0.5em !important;
 }
 
 .attachment-box {
