@@ -37,7 +37,7 @@ const App: React.FC = () => {
   const [uiFontSize, setUiFontSize] = useState(parseInt(loadSetting(UI_FONT_SIZE_KEY) || '13'));
   const [currentPlatform, setCurrentPlatform] = useState<Platform>((loadSetting(CURRENT_PLATFORM_KEY) as Platform) || 'gmail');
   const [gasUrl, setGasUrl] = useState(loadSetting(GAS_URL_KEY) || '');
-  const [whatsappCountryCode, setWhatsappCountryCode] = useState(loadSetting(WHATSAPP_COUNTRY_CODE_KEY) || '92');
+  const [whatsappCountryCode, setWhatsappCountryCode] = useState(loadSetting(WHATSAPP_COUNTRY_CODE_KEY) || '');
   const [sidePanelWidth, setSidePanelWidth] = useState(parseInt(loadSetting(SIDE_PANEL_WIDTH_KEY) || '450'));
   const [isSourceMode, setIsSourceMode] = useState(loadSetting(SOURCE_MODE_KEY) === 'true');
   const [mailCountMode, setMailCountMode] = useState<'auto' | 'fixed' | 'manual'>((loadSetting(MAIL_COUNT_MODE_KEY) as any) || 'auto');
@@ -57,11 +57,11 @@ const App: React.FC = () => {
   const [mailQueue, setMailQueue] = useState<MailQueueItem[]>([]);
   const [isMailPaused, setIsMailPaused] = useState(false);
   const [showMailQueue, setShowMailQueue] = useState(false);
-  
+
   const mailQueueRef = useRef<MailQueueItem[]>([]);
   const isMailPausedRef = useRef(false);
   const isMailCancelledRef = useRef(false);
-  
+
   // Compose States
   const [to, setTo] = useState('');
   const [cc, setCc] = useState('');
@@ -89,7 +89,7 @@ const App: React.FC = () => {
 
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [linkDialog, setLinkDialog] = useState<{ show: boolean; url: string; range: Range | null }>({ show: false, url: '', range: null });
-  
+
   const editorRef = useRef<HTMLDivElement>(null);
   const bulkFileInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
@@ -315,7 +315,7 @@ const App: React.FC = () => {
       const range = selection.getRangeAt(0);
       let container = range.commonAncestorContainer as HTMLElement;
       if (container.nodeType === 3) container = container.parentElement!;
-      
+
       // Find the closest div or p to apply style to
       const block = container.closest('div, p') as HTMLElement;
       if (block && editorRef.current.contains(block)) {
@@ -395,7 +395,7 @@ const App: React.FC = () => {
   const formatWhatsAppPhone = (phone: string) => {
     let cleaned = phone.replace(/\D/g, '');
     if (!cleaned) return '';
-    
+
     // If number doesn't start with the current country code and is likely a local number
     // (Usually 9-11 digits without CC), prepend the country code.
     if (whatsappCountryCode && !cleaned.startsWith(whatsappCountryCode)) {
@@ -429,10 +429,10 @@ const App: React.FC = () => {
     targetIndices.forEach((dataIndex) => {
       const row = isBulk ? bulkData[dataIndex] : {};
       const recipientTo = replaceVariables(to, row);
-      
+
       // Split by comma in case of multiple numbers in one field
       const phones = recipientTo.split(',').map(p => p.trim()).filter(Boolean);
-      
+
       phones.forEach(p => {
         let cleanedPhone = p.replace(/\D/g, '');
         if (!cleanedPhone) return;
@@ -516,7 +516,7 @@ const App: React.FC = () => {
       return;
     }
     const isBulk = bulkActive && bulkData.length > 0;
-    
+
     let targetIndices: number[] = [];
 
     if (isBulk) {
@@ -535,7 +535,7 @@ const App: React.FC = () => {
 
     const sendCount = targetIndices.length;
     if (isBulk && sendCount <= 0) { showNotify('No recipients selected', 'error'); return; }
-    
+
     // Prepare Queue
     const newQueue: MailQueueItem[] = targetIndices.map((dataIndex, idx) => {
       const row = isBulk ? bulkData[dataIndex] : {};
@@ -595,7 +595,7 @@ const App: React.FC = () => {
       }
 
       if (isBulk && (i + 1) % 5 === 0) showNotify(`Sent ${i + 1}/${sendCount}...`, 'info');
-      
+
       // Small delay between sends to prevent hitting limits too fast
       await new Promise(resolve => setTimeout(resolve, 300));
     }
@@ -606,10 +606,10 @@ const App: React.FC = () => {
     } else {
       showNotify(`Sending cancelled.`, 'info');
     }
-    
-    if (!isBulk && !isMailCancelledRef.current) { 
-      setTo(''); setCc(''); setBcc(''); setSubject(''); setBody(''); setAttachments([]); 
-      if (editorRef.current) editorRef.current.innerHTML = ''; 
+
+    if (!isBulk && !isMailCancelledRef.current) {
+      setTo(''); setCc(''); setBcc(''); setSubject(''); setBody(''); setAttachments([]);
+      if (editorRef.current) editorRef.current.innerHTML = '';
     }
   };
 
@@ -664,19 +664,19 @@ const App: React.FC = () => {
           </div>
         </div>
         <div className="sidebar-bottom">
-          <button className={`icon-btn mobile-only ${showBulk ? 'active' : ''}`} onClick={() => { setShowBulk(!showBulk); setShowPreview(false); setShowWhatsAppList(false); setShowMailQueue(false); setShowMobileSidebar(false); }} title="Bulk Mode">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </button>
           <button className={`icon-btn mobile-only ${showPreview ? 'active' : ''}`} onClick={() => { setShowPreview(!showPreview); setShowBulk(false); setShowWhatsAppList(false); setShowMailQueue(false); setShowMobileSidebar(false); }} title="Preview">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
-          <button className={`icon-btn ${showHelp ? 'active' : ''}`} onClick={() => { setShowHelp(!showHelp); setShowMobileSidebar(false); }} title="Setup Guide">
+          <button className={`icon-btn mobile-only ${bulkActive ? 'active' : ''}`} onClick={() => { setShowBulk(!showBulk); setShowPreview(false); setShowWhatsAppList(false); setShowMailQueue(false); setShowMobileSidebar(false); }} title="Bulk Mode">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button className={`icon-btn desktop-only ${showHelp ? 'active' : ''}`} onClick={() => { setShowHelp(!showHelp); setShowMobileSidebar(false); }} title="Setup Guide">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </button>
           <button className={`icon-btn desktop-only ${showLogs ? 'active' : ''}`} onClick={() => { setShowLogs(!showLogs); setShowMobileSidebar(false); }} title="Live Logs">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           </button>
-          <button className={`icon-btn desktop-only ${showSettings ? 'active' : ''}`} onClick={() => { setShowSettings(!showSettings); setShowMobileSidebar(false); }} title="Settings">
+          <button className={`icon-btn ${showSettings ? 'active' : ''}`} onClick={() => { setShowSettings(!showSettings); setShowMobileSidebar(false); }} title="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
@@ -721,9 +721,9 @@ const App: React.FC = () => {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
               <span>Logs</span>
             </button>
-            <button className={`preview-toggle-btn mobile-only ${showSettings ? 'active' : ''}`} onClick={() => { setShowSettings(!showSettings); setShowMobileSidebar(false); }} title="Settings">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span>Settings</span>
+            <button className={`preview-toggle-btn mobile-only ${showHelp ? 'active' : ''}`} onClick={() => { setShowHelp(!showHelp); setShowMobileSidebar(false); }} title="Setup Guide">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>Help</span>
             </button>
             <button className="send-btn" onClick={currentPlatform === 'whatsapp' ? handleGenerateWhatsApp : handleSend} disabled={sending}>
               {sending ? (
@@ -751,29 +751,28 @@ const App: React.FC = () => {
                     <input 
                       type="text" 
                       className="country-code-input"
-                      placeholder="CC" 
+                      placeholder="Default Country Code" 
                       value={whatsappCountryCode} 
                       onChange={e => setWhatsappCountryCode(e.target.value.replace(/\D/g, ''))} 
                       title="Country Code"
-                    />
-                    <input 
-                      type="text" 
-                      placeholder="Phone numbers, {phone_col}" 
-                      value={to} 
-                      onChange={e => setTo(e.target.value)} 
-                      required 
+                    />                    <input
+                      type="text"
+                      placeholder="Phone numbers, {phone_col}"
+                      value={to}
+                      onChange={e => setTo(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
               ) : (
                 <div className="input-row">
                   <label>To</label>
-                  <input 
-                    type="text" 
-                    placeholder="user1@example.com, {email_col}" 
-                    value={to} 
-                    onChange={e => setTo(e.target.value)} 
-                    required 
+                  <input
+                    type="text"
+                    placeholder="user1@example.com, {email_col}"
+                    value={to}
+                    onChange={e => setTo(e.target.value)}
+                    required
                   />
                 </div>
               )}
@@ -854,28 +853,28 @@ const App: React.FC = () => {
                       <button type="button" onClick={() => insertWhatsAppFormatting('> ')} title="Block Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
                     </div>
                   </div>
-                  <textarea 
-                    className="whatsapp-editor" 
+                  <textarea
+                    className="whatsapp-editor"
                     ref={whatsappTextareaRef}
-                    value={body} 
-                    onChange={(e) => setBody(e.target.value)} 
-                    placeholder="Type your WhatsApp message... Use toolbar for formatting" 
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    placeholder="Type your WhatsApp message... Use toolbar for formatting"
                   />
                 </div>
               )}
             </div>
 
             {currentPlatform !== 'whatsapp' && (
-              <div 
-                className={`attachment-box ${isDragging ? 'dragging' : ''}`} 
+              <div
+                className={`attachment-box ${isDragging ? 'dragging' : ''}`}
                 onClick={() => attachmentInputRef.current?.click()}
               >
-                <input 
-                  type="file" 
-                  multiple 
-                  ref={attachmentInputRef} 
-                  style={{ display: 'none' }} 
-                  onChange={(e) => { handleFile(e.target.files); e.target.value = ''; }} 
+                <input
+                  type="file"
+                  multiple
+                  ref={attachmentInputRef}
+                  style={{ display: 'none' }}
+                  onChange={(e) => { handleFile(e.target.files); e.target.value = ''; }}
                 />
                 {attachments.length === 0 ? (
                   <div className="attachment-placeholder">
@@ -970,15 +969,15 @@ const App: React.FC = () => {
                             <div key={item.id} className={`whatsapp-item ${item.sent ? 'sent' : ''}`}>
                               <div className="whatsapp-item-info">
                                 <div className="whatsapp-item-edit-group">
-                                  <input 
-                                    className="item-cc-input" 
-                                    value={item.cc} 
-                                    onChange={e => updateWhatsAppItem(item.id, 'cc', e.target.value.replace(/\D/g, ''))} 
+                                  <input
+                                    className="item-cc-input"
+                                    value={item.cc}
+                                    onChange={e => updateWhatsAppItem(item.id, 'cc', e.target.value.replace(/\D/g, ''))}
                                   />
-                                  <input 
-                                    className="item-phone-input" 
-                                    value={item.phone} 
-                                    onChange={e => updateWhatsAppItem(item.id, 'phone', e.target.value.replace(/\D/g, ''))} 
+                                  <input
+                                    className="item-phone-input"
+                                    value={item.phone}
+                                    onChange={e => updateWhatsAppItem(item.id, 'phone', e.target.value.replace(/\D/g, ''))}
                                   />
                                 </div>
                                 <span className="text-preview">{item.text.substring(0, 60)}...</span>
@@ -1005,11 +1004,11 @@ const App: React.FC = () => {
                           <div><strong>To:</strong> {to || '(No Recipient)'}</div>
                         </div>
                         <hr className="preview-divider" />
-                        <div 
-                          className="preview-content" 
-                          dangerouslySetInnerHTML={{ 
-                            __html: currentPlatform === 'whatsapp' ? formatWhatsAppPreview(body) : (body || '...') 
-                          }} 
+                        <div
+                          className="preview-content"
+                          dangerouslySetInnerHTML={{
+                            __html: currentPlatform === 'whatsapp' ? formatWhatsAppPreview(body) : (body || '...')
+                          }}
                         />
                       </div>
                     </div>
@@ -1155,8 +1154,8 @@ const App: React.FC = () => {
                     <input type="url" placeholder="GAS Deployment URL" value={gasUrl} onChange={e => setGasUrl(e.target.value)} />
                   </div>
                   <div className="setting-sub-section">
-                    <span className="sub-label">WhatsApp Integration</span>
-                    <input type="text" placeholder="Default Country Code (e.g. 92)" value={whatsappCountryCode} onChange={e => setWhatsappCountryCode(e.target.value)} />
+                    <span className="sub-label">Country Code</span>
+                    <input type="text" placeholder="Default Country Code" value={whatsappCountryCode} onChange={e => setWhatsappCountryCode(e.target.value)} />
                   </div>
                 </div>
               </section>
