@@ -898,7 +898,7 @@ code,
 
 .preview-body {
   flex: 1;
-  padding: 1.8em;
+  padding: 1em;
   overflow-y: auto;
   background-color: var(--bg-primary);
 }
@@ -907,9 +907,9 @@ code,
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   min-height: 100%;
-  padding: 2.5em;
+  padding: 1.5em;
   border-radius: 0.3em;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
 }
 
 .preview-metadata {
@@ -934,15 +934,22 @@ code,
   word-break: break-word;
 }
 
+.preview-content a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .preview-content strong { font-weight: 700; }
 .preview-content em { font-style: italic; }
-.preview-content del { text-decoration: line-through; color: #888; }
+.preview-content del { text-decoration: line-through; color: var(--text-tertiary); }
 .preview-content code {
-  background-color: #f0f0f0;
+  background-color: var(--bg-tertiary);
   padding: 0.2em 0.4em;
   border-radius: 0.3em;
   font-family: var(--font-mono);
   font-size: 0.9em;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 .preview-content pre {
   background-color: var(--bg-tertiary);
@@ -950,9 +957,10 @@ code,
   border-radius: 0.4em;
   overflow-x: auto;
   margin: 1em 0;
+  border: 1px solid var(--border);
 }
 .preview-content blockquote {
-  border-left: 4px solid var(--border-strong);
+  border-left: 4px solid var(--accent);
   padding-left: 1em;
   margin: 1em 0;
   color: var(--text-secondary);
@@ -1092,7 +1100,23 @@ code,
 }
 
 .var-label {
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 40%;
+}
+
+.var-label code {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-color: var(--bg-tertiary);
+  padding: 0.25em 0.5em;
+  border-radius: 0.3em;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
 .mapping-arrow {
@@ -1118,7 +1142,10 @@ code,
   font-size: 0.9em;
   outline: none;
   cursor: pointer;
-  min-width: 12em;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 50%;
+  text-overflow: ellipsis;
 }
 
 .col-select:hover {

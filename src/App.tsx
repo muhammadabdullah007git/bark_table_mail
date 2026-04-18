@@ -57,6 +57,7 @@ const App: React.FC = () => {
   const [mailQueue, setMailQueue] = useState<MailQueueItem[]>([]);
   const [isMailPaused, setIsMailPaused] = useState(false);
   const [showMailQueue, setShowMailQueue] = useState(false);
+  const [showSubjectEmptyConsent, setShowSubjectEmptyConsent] = useState(false);
 
   const mailQueueRef = useRef<MailQueueItem[]>([]);
   const isMailPausedRef = useRef(false);
@@ -143,9 +144,9 @@ const App: React.FC = () => {
 
   // Persist Preferences
   useEffect(() => {
-    document.body.className = `theme-${theme}`;
-    document.body.style.setProperty('--font-family', uiFont);
-    document.body.style.setProperty('--base-font-size', `${uiFontSize}px`);
+    document.documentElement.className = `theme-${theme}`;
+    document.documentElement.style.setProperty('--font-family', uiFont);
+    document.documentElement.style.setProperty('--base-font-size', `${uiFontSize}px`);
     saveSetting(THEME_KEY, theme);
     saveSetting(UI_FONT_KEY, uiFont);
     saveSetting(UI_FONT_SIZE_KEY, uiFontSize.toString());
@@ -520,13 +521,21 @@ const App: React.FC = () => {
       .replace(/\n/g, '<br />');
   };
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSend = async (e?: React.FormEvent | React.MouseEvent | null, bypassSubjectCheck: boolean = false) => {
+    if (e && 'preventDefault' in e) e.preventDefault();
+    
     if (currentPlatform === 'gmail' && !gasUrl) {
       showNotify('GAS URL missing. Opening setup guide...', 'error');
       setShowHelp(true);
       return;
     }
+
+    if (currentPlatform === 'gmail' && !subject.trim() && !bypassSubjectCheck) {
+      setShowSubjectEmptyConsent(true);
+      return;
+    }
+    
+    setShowSubjectEmptyConsent(false);
     const isBulk = bulkActive && bulkData.length > 0;
 
     let targetIndices: number[] = [];
@@ -661,6 +670,18 @@ const App: React.FC = () => {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   );
 
+  const getThemeColors = () => {
+    switch(theme) {
+      case 'dark': return { bg: '#000000', text: '#ffffff', font: uiFont };
+      case 'off-white': return { bg: '#f5f5f5', text: '#18181b', font: uiFont };
+      case 'one-dark': return { bg: '#21252b', text: '#abb2bf', font: uiFont };
+      case 'github-light': return { bg: '#ffffff', text: '#24292f', font: uiFont };
+      default: return { bg: '#000000', text: '#ffffff', font: uiFont };
+    }
+  };
+
+  const themeColors = getThemeColors();
+
   return (
     <div className={`app-container ${showMobileSidebar ? 'mobile-sidebar-open' : ''}`}>
       <nav className={`sidebar ${showMobileSidebar ? 'open' : ''}`}>
@@ -737,7 +758,7 @@ const App: React.FC = () => {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               <span>Help</span>
             </button>
-            <button className="send-btn" onClick={currentPlatform === 'whatsapp' ? handleGenerateWhatsApp : handleSend} disabled={sending}>
+            <button className="send-btn" onClick={(e) => currentPlatform === 'whatsapp' ? handleGenerateWhatsApp(e) : handleSend(e)} disabled={sending}>
               {sending ? (
                 <>
                   <svg className="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
@@ -792,7 +813,7 @@ const App: React.FC = () => {
                 <>
                   <div className="input-row"><label>Cc</label><input type="text" placeholder="cc1@example.com, {cc_col}" value={cc} onChange={e => setCc(e.target.value)} /></div>
                   <div className="input-row"><label>Bcc</label><input type="text" placeholder="bcc1@example.com, {bcc_col}" value={bcc} onChange={e => setBcc(e.target.value)} /></div>
-                  <div className="input-row"><label>Subject</label><input type="text" placeholder="Subject {name}" value={subject} onChange={e => setSubject(e.target.value)} required /></div>
+                  <div className="input-row"><label>Subject</label><input type="text" placeholder="Subject {name}" value={subject} onChange={e => setSubject(e.target.value)} /></div>
                 </>
               )}
             </div>
@@ -1016,12 +1037,53 @@ const App: React.FC = () => {
                           <div><strong>To:</strong> {to || '(No Recipient)'}</div>
                         </div>
                         <hr className="preview-divider" />
-                        <div
-                          className="preview-content"
-                          dangerouslySetInnerHTML={{
-                            __html: currentPlatform === 'whatsapp' ? formatWhatsAppPreview(body) : (body || '...')
-                          }}
-                        />
+                        <div className="preview-content">
+                          {currentPlatform === 'whatsapp' ? (
+                            <div dangerouslySetInnerHTML={{ __html: formatWhatsAppPreview(body) }} />
+                          ) : (
+                            <iframe
+                              key={body}
+                              title="Mail Preview"
+                              onLoad={(e) => {
+                                try {
+                                  const iframe = e.currentTarget;
+                                  if (iframe.contentWindow) {
+                                    iframe.style.height = '0px'; // Reset for recalculation
+                                    iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+                                  }
+                                } catch (err) { console.warn('Could not resize iframe', err); }
+                              }}
+                              srcDoc={`
+                                <!DOCTYPE html>
+                                <html>
+                                  <head>
+                                    <style>
+                                      html, body {
+                                        margin: 0;
+                                        padding: 0;
+                                        background-color: transparent;
+                                        color: ${themeColors.text};
+                                        font-family: ${themeColors.font}, sans-serif;
+                                        font-size: 14px;
+                                        line-height: 1.6;
+                                        word-wrap: break-word;
+                                      }
+                                      * { max-width: 100%; box-sizing: border-box; }
+                                    </style>
+                                  </head>
+                                  <body>${body || '...'}</body>
+                                </html>
+                              `}
+                              style={{
+                                width: '100%',
+                                minHeight: '100px',
+                                border: 'none',
+                                background: 'transparent',
+                                overflow: 'hidden'
+                              }}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </>
@@ -1159,6 +1221,26 @@ const App: React.FC = () => {
           {notification.type === 'success' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
           {notification.type === 'error' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>}
           <span>{notification.message}</span>
+        </div>
+      )}
+
+      {showSubjectEmptyConsent && (
+        <div className="modal-overlay" onClick={() => setShowSubjectEmptyConsent(false)}>
+          <div className="modal-content small" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Empty Subject</h3>
+              <button className="close-btn" onClick={() => setShowSubjectEmptyConsent(false)}><CloseIcon /></button>
+            </div>
+            <div className="settings-panel-body">
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95em', margin: '0 0 1em 0' }}>
+                Are you sure you want to send this email without a subject?
+              </p>
+            </div>
+            <div className="modal-actions" style={{ justifyContent: 'space-between' }}>
+              <button className="primary-btn" onClick={() => handleSend(null, true)}>Send Anyway</button>
+              <button className="secondary-btn" onClick={() => setShowSubjectEmptyConsent(false)}>Cancel</button>
+            </div>
+          </div>
         </div>
       )}
 
