@@ -663,24 +663,17 @@ code,
   flex-direction: column;
   gap: 0.2em;
   flex: 1;
-  overflow: hidden;
 }
 
 .queue-item-info .to {
   font-weight: 600;
   font-size: 0.95em;
   color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .queue-item-info .subject {
   font-size: 0.85em;
   color: var(--text-tertiary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .queue-item-info .error-msg {
@@ -2051,4 +2044,112 @@ code,
   .desktop-only {
     display: none !important;
   }
+}
+
+/* Interactive Queue Styles */
+.queue-edit-input {
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--text-primary);
+  font-size: 0.95em;
+  padding: 0.2em 0;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.queue-edit-input:focus {
+  border-bottom-color: var(--accent);
+}
+
+.queue-edit-input.to {
+  font-weight: 600;
+}
+
+.queue-edit-input.subject {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+}
+
+.queue-edit-body {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 0.4em;
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  padding: 0.5em;
+  width: 100%;
+  min-height: 4em;
+  resize: vertical;
+  margin-top: 0.5em;
+  font-family: var(--font-mono);
+  outline: none;
+}
+
+.queue-edit-body:focus {
+  border-color: var(--accent-faded);
+  color: var(--text-primary);
+}
+
+.queue-item-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  margin-top: 0.5em;
+}
+
+.att-mini-chip {
+  background-color: var(--accent-faded);
+  border: 1px solid var(--accent);
+  border-radius: 0.3em;
+  padding: 0.1em 0.5em;
+  font-size: 0.75em;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  color: var(--text-primary);
+}
+
+.att-mini-chip button {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.att-mini-chip button:hover {
+  color: #ef4444;
+}
+
+.add-att-btn {
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 0.3em;
+  width: 1.8em;
+  height: 1.8em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.add-att-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background-color: var(--bg-tertiary);
+}
+
+.queue-item.staged {
+  border-left: 3px solid var(--accent-faded);
+}
+
+.icon-btn.success:hover {
+  background-color: #10b981;
+  color: white;
 }

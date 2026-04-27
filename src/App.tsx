@@ -20,11 +20,12 @@ interface WhatsAppItem {
 }
 
 interface MailQueueItem {
-  id: number;
+  id: string;
   to: string;
   subject: string;
-  payload: any;
-  status: 'pending' | 'sending' | 'success' | 'error' | 'paused' | 'cancelled';
+  body: string;
+  attachments: File[];
+  status: 'staged' | 'pending' | 'sending' | 'success' | 'error' | 'paused' | 'cancelled';
   error?: string;
 }
 
@@ -69,7 +70,8 @@ const App: React.FC = () => {
   const [bcc, setBcc] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
-  const [attachments, setAttachments] = useState<{ name: string; type: string; data: string }[]>([]);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachmentMappingCol, setAttachmentMappingCol] = useState(loadSetting('mailman_att_mapping_col') || '');
   const [sending, setSending] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -187,6 +189,10 @@ const App: React.FC = () => {
   useEffect(() => {
     saveSetting(FIXED_MAIL_RANGE_KEY, JSON.stringify(fixedMailRange));
   }, [fixedMailRange]);
+
+  useEffect(() => {
+    saveSetting('mailman_att_mapping_col', attachmentMappingCol);
+  }, [attachmentMappingCol]);
 
   useEffect(() => {
     const combinedText = `${to} ${cc} ${bcc} ${subject} ${body}`;
@@ -388,18 +394,7 @@ const App: React.FC = () => {
 
   const handleFile = (files: FileList | null) => {
     if (!files) return;
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64Data = e.target?.result as string;
-        setAttachments(prev => [...prev, {
-          name: file.name,
-          type: file.type,
-          data: base64Data.split(',')[1]
-        }]);
-      };
-      reader.readAsDataURL(file);
-    });
+    setAttachments(prev => [...prev, ...Array.from(files)]);
     showNotify(`${files.length} file(s) attached`, 'success');
   };
 
@@ -521,6 +516,18 @@ const App: React.FC = () => {
       .replace(/\n/g, '<br />');
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleSend = async (e?: React.FormEvent | React.MouseEvent | null, bypassSubjectCheck: boolean = false) => {
     if (e && 'preventDefault' in e) e.preventDefault();
     
@@ -557,24 +564,45 @@ const App: React.FC = () => {
     const sendCount = targetIndices.length;
     if (isBulk && sendCount <= 0) { showNotify('No recipients selected', 'error'); return; }
 
-    // Prepare Queue
+    // Generate Queue Items (Staged)
     const newQueue: MailQueueItem[] = targetIndices.map((dataIndex, idx) => {
       const row = isBulk ? bulkData[dataIndex] : {};
       const recipientTo = replaceVariables(to, row);
-      const payload = {
-        to: recipientTo.split(',').map(s => s.trim()).filter(Boolean),
-        cc: replaceVariables(cc, row).split(',').map(s => s.trim()).filter(Boolean),
-        bcc: replaceVariables(bcc, row).split(',').map(s => s.trim()).filter(Boolean),
+      
+      // Attachment matching logic
+      let itemAttachments = [...attachments];
+      if (isBulk && attachmentMappingCol) {
+        const cellValue = String(row[attachmentMappingCol] || '').trim();
+        const targetFileName = cellValue.toLowerCase();
+        
+        if (targetFileName) {
+          // 1. Try exact match (case-insensitive)
+          // 2. Try matching filename without extension
+          const matchedFile = attachments.find(f => {
+            const fileName = f.name.toLowerCase();
+            const fileNameNoExt = fileName.split('.').slice(0, -1).join('.');
+            return fileName === targetFileName || fileNameNoExt === targetFileName;
+          });
+
+          if (matchedFile) {
+            itemAttachments = [matchedFile];
+          } else {
+            console.warn(`No attachment found matching: "${cellValue}"`);
+            itemAttachments = []; // Clear if column has value but no file matches
+          }
+        } else {
+          // If mapping column is set but cell is empty, default to ALL attachments in pool
+          itemAttachments = [...attachments];
+        }
+      }
+
+      return {
+        id: crypto.randomUUID(),
+        to: recipientTo,
         subject: replaceVariables(subject, row),
         body: replaceVariables(body, row),
-        attachments
-      };
-      return {
-        id: idx,
-        to: recipientTo,
-        subject: payload.subject,
-        payload,
-        status: 'pending'
+        attachments: itemAttachments,
+        status: isBulk ? 'staged' : 'pending' // Auto-queue for bulk, immediate pending for single
       };
     });
 
@@ -583,59 +611,113 @@ const App: React.FC = () => {
     setShowMailQueue(true);
     setShowBulk(false);
     setShowPreview(false);
+    
+    if (isBulk) {
+      showNotify(`Generated ${sendCount} messages in queue`, 'success');
+      return; // Stop here for bulk, user will review and click "Send All"
+    }
+
+    // For single mail, continue to process
+    await startQueueProcessing();
+  };
+
+  const startQueueProcessing = async () => {
+    if (sending) return;
+    
     isMailPausedRef.current = false;
     isMailCancelledRef.current = false;
     setIsMailPaused(false);
     setSending(true);
 
-    if (isBulk) addLog(`Starting bulk send of ${sendCount} messages...`, 'info');
-
-    for (let i = 0; i < newQueue.length; i++) {
-      // Check for global cancel
+    for (let i = 0; i < mailQueueRef.current.length; i++) {
       if (isMailCancelledRef.current) break;
-
-      // Check for global pause
       while (isMailPausedRef.current && !isMailCancelledRef.current) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       if (isMailCancelledRef.current) break;
 
       const item = mailQueueRef.current[i];
-      if (item.status === 'cancelled' || item.status === 'success') continue;
+      if (item.status !== 'pending') continue;
 
-      // Update status to sending
       updateQueueItemStatus(item.id, 'sending');
+      console.log(`[Queue] Processing item ${item.id} to ${item.to}`);
 
       try {
-        await fetch(gasUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item.payload) });
+        // Prepare payload with lazy base64 encoding
+        console.log(`[Queue] Encoding ${item.attachments.length} attachments...`);
+        const encodedAttachments = await Promise.all(item.attachments.map(async (file) => ({
+          name: file.name,
+          type: file.type,
+          data: await fileToBase64(file)
+        })));
+
+        const payload = {
+          to: item.to.split(',').map(s => s.trim()).filter(Boolean),
+          cc: cc.split(',').map(s => s.trim()).filter(Boolean),
+          bcc: bcc.split(',').map(s => s.trim()).filter(Boolean),
+          subject: item.subject,
+          body: item.body,
+          attachments: encodedAttachments
+        };
+
+        console.log(`[Queue] Sending payload to GAS... Size: ${Math.round(JSON.stringify(payload).length / 1024)} KB`);
+
+        // Use 'text/plain' to avoid CORS preflight which GAS doesn't support well
+        const response = await fetch(gasUrl, { 
+          method: 'POST', 
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' }, 
+          body: JSON.stringify(payload) 
+        });
+
+        console.log(`[Queue] Request sent for ${item.to}`);
         updateQueueItemStatus(item.id, 'success');
         addLog(`Successfully sent to: ${item.to}`, 'success');
       } catch (err) {
+        console.error(`[Queue] Error sending to ${item.to}:`, err);
         updateQueueItemStatus(item.id, 'error', String(err));
         addLog(`Failed sending to: ${item.to} - ${String(err)}`, 'error');
       }
 
-      if (isBulk && (i + 1) % 5 === 0) showNotify(`Sent ${i + 1}/${sendCount}...`, 'info');
-
-      // Small delay between sends to prevent hitting limits too fast
       await new Promise(resolve => setTimeout(resolve, 300));
     }
 
     setSending(false);
-    if (!isMailCancelledRef.current) {
-      showNotify(`Processed ${sendCount} message(s)!`, 'success');
-    } else {
-      showNotify(`Sending cancelled.`, 'info');
-    }
-
-    if (!isBulk && !isMailCancelledRef.current) {
-      setTo(''); setCc(''); setBcc(''); setSubject(''); setBody(''); setAttachments([]);
-      if (editorRef.current) editorRef.current.innerHTML = '';
-    }
+    if (isMailCancelledRef.current) showNotify(`Sending cancelled.`, 'info');
   };
 
-  const updateQueueItemStatus = (id: number, status: MailQueueItem['status'], error?: string) => {
+  const updateQueueItemStatus = (id: string, status: MailQueueItem['status'], error?: string) => {
     const nextQueue = mailQueueRef.current.map(item => item.id === id ? { ...item, status, error } : item);
+    mailQueueRef.current = nextQueue;
+    setMailQueue(nextQueue);
+  };
+
+  const updateQueueItem = (id: string, updates: Partial<MailQueueItem>) => {
+    const nextQueue = mailQueueRef.current.map(item => item.id === id ? { ...item, ...updates } : item);
+    mailQueueRef.current = nextQueue;
+    setMailQueue(nextQueue);
+  };
+
+  const sendAllStaged = () => {
+    const nextQueue = mailQueueRef.current.map(item => 
+      item.status === 'staged' ? { ...item, status: 'pending' as const } : item
+    );
+    mailQueueRef.current = nextQueue;
+    setMailQueue(nextQueue);
+    startQueueProcessing();
+  };
+
+  const sendSingleQueueItem = (id: string) => {
+    const nextQueue = mailQueueRef.current.map(item => 
+      item.id === id ? { ...item, status: 'pending' as const } : item
+    );
+    mailQueueRef.current = nextQueue;
+    setMailQueue(nextQueue);
+    startQueueProcessing();
+  };
+
+  const removeItemFromQueue = (id: string) => {
+    const nextQueue = mailQueueRef.current.filter(item => item.id !== id);
     mailQueueRef.current = nextQueue;
     setMailQueue(nextQueue);
   };
@@ -650,15 +732,11 @@ const App: React.FC = () => {
     setSending(false);
   };
 
-  const toggleItemPause = (id: number) => {
+  const toggleItemPause = (id: string) => {
     const item = mailQueueRef.current.find(i => i.id === id);
     if (!item) return;
     const newStatus = item.status === 'paused' ? 'pending' : 'paused';
     updateQueueItemStatus(id, newStatus);
-  };
-
-  const cancelItem = (id: number) => {
-    updateQueueItemStatus(id, 'cancelled');
   };
 
   const copyToClipboard = (text: string) => {
@@ -767,7 +845,7 @@ const App: React.FC = () => {
               ) : (
                 <>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="no-scale" style={{ marginRight: '8px' }}><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                  <span>{currentPlatform === 'whatsapp' ? 'Generate' : 'Send'}</span>
+                  <span>{(currentPlatform === 'whatsapp' || bulkActive) ? 'Generate' : 'Send'}</span>
                 </>
               )}
             </button>
@@ -938,13 +1016,18 @@ const App: React.FC = () => {
                 {currentPlatform === 'gmail' && showMailQueue ? (
                   <>
                     <div className="preview-header">
-                      <span>Mail Queue</span>
+                      <span>Mail Queue ({mailQueue.filter(m => m.status === 'staged').length} Staged)</span>
                       <div className="queue-global-actions">
+                        {mailQueue.some(m => m.status === 'staged') && (
+                          <button className="primary-btn small" onClick={sendAllStaged} title="Send All Staged" style={{ padding: '0.4em 0.8em', fontSize: '0.8em' }}>
+                            Send All
+                          </button>
+                        )}
                         <button className={`icon-btn small ${isMailPaused ? 'active' : ''}`} onClick={toggleGlobalPause} title={isMailPaused ? 'Resume All' : 'Pause All'}>
                           {isMailPaused ? <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>}
                         </button>
-                        <button className="icon-btn small danger" onClick={cancelGlobalSending} title="Cancel All">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        <button className="icon-btn small danger" onClick={() => { setMailQueue([]); mailQueueRef.current = []; }} title="Clear Queue">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                         </button>
                         <button className="close-btn" onClick={() => setShowMailQueue(false)}><CloseIcon /></button>
                       </div>
@@ -953,8 +1036,51 @@ const App: React.FC = () => {
                       {mailQueue.map((item) => (
                         <div key={item.id} className={`queue-item ${item.status}`}>
                           <div className="queue-item-info">
-                            <div className="to">{item.to}</div>
-                            <div className="subject">{item.subject}</div>
+                            <input 
+                              className="queue-edit-input to" 
+                              value={item.to} 
+                              onChange={e => updateQueueItem(item.id, { to: e.target.value })}
+                              placeholder="To"
+                              disabled={item.status !== 'staged'}
+                            />
+                            <input 
+                              className="queue-edit-input subject" 
+                              value={item.subject} 
+                              onChange={e => updateQueueItem(item.id, { subject: e.target.value })}
+                              placeholder="Subject"
+                              disabled={item.status !== 'staged'}
+                            />
+                            <textarea 
+                              className="queue-edit-body" 
+                              value={item.body} 
+                              onChange={e => updateQueueItem(item.id, { body: e.target.value })}
+                              placeholder="Body (HTML)"
+                              disabled={item.status !== 'staged'}
+                            />
+                            <div className="queue-item-attachments">
+                              {item.attachments.map((file, idx) => (
+                                <div key={idx} className="att-mini-chip">
+                                  <span>{file.name}</span>
+                                  {item.status === 'staged' && (
+                                    <button onClick={() => updateQueueItem(item.id, { attachments: item.attachments.filter((_, i) => i !== idx) })}>&times;</button>
+                                  )}
+                                </div>
+                              ))}
+                              {item.status === 'staged' && (
+                                <button className="add-att-btn" onClick={() => {
+                                  const input = document.createElement('input');
+                                  input.type = 'file';
+                                  input.multiple = true;
+                                  input.onchange = (e) => {
+                                    const files = (e.target as HTMLInputElement).files;
+                                    if (files) {
+                                      updateQueueItem(item.id, { attachments: [...item.attachments, ...Array.from(files)] });
+                                    }
+                                  };
+                                  input.click();
+                                }}>+</button>
+                              )}
+                            </div>
                             {item.error && <div className="error-msg">{item.error}</div>}
                           </div>
                           <div className="queue-item-status">
@@ -969,22 +1095,28 @@ const App: React.FC = () => {
                                 item.status
                               )}
                             </span>
-                            {(item.status === 'pending' || item.status === 'paused' || item.status === 'sending') && (
-                              <div className="item-actions">
+                            <div className="item-actions">
+                              {item.status === 'staged' && (
+                                <button className="icon-btn xs success" onClick={() => sendSingleQueueItem(item.id)} title="Send Now">
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 2 11 13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                </button>
+                              )}
+                              {(item.status === 'pending' || item.status === 'paused' || item.status === 'sending') && (
                                 <button className="icon-btn xs" onClick={() => toggleItemPause(item.id)}>
                                   {item.status === 'paused' ? <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> : <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>}
                                 </button>
-                                <button className="icon-btn xs danger" onClick={() => cancelItem(item.id)}>
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                </button>
-                              </div>
-                            )}
+                              )}
+                              <button className="icon-btn xs danger" onClick={() => removeItemFromQueue(item.id)} title="Remove">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   </>
-                ) : currentPlatform === 'whatsapp' && showWhatsAppList ? (
+                ) : null}
+                {currentPlatform === 'whatsapp' && showWhatsAppList ? (
                   <>
                     <div className="preview-header">
                       <span>WhatsApp Queue</span>
@@ -1120,6 +1252,61 @@ const App: React.FC = () => {
                           )}
                         </div>
                       </div>
+
+                      <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
+                        <label>Attachment Mapping</label>
+                        <div className="mapping-container">
+                          <div className="mapping-item-wrapper">
+                            <div className="mapping-item">
+                              <div className="var-label">File Matching Col</div>
+                              <select className="col-select" value={attachmentMappingCol} onChange={e => setAttachmentMappingCol(e.target.value)}>
+                                <option value="">None (Send all pool)</option>
+                                {bulkColumns.map(col => <option key={col} value={col}>{col}</option>)}
+                              </select>
+                            </div>
+                            <p className="hint" style={{ marginTop: '0.4em' }}>If set, only files matching this column's value will be attached to that row.</p>
+                            
+                            {attachmentMappingCol && bulkData.length > 0 && (
+                              <div className="mapping-preview-status" style={{ marginTop: '0.8em', padding: '0.6em', backgroundColor: 'var(--bg-tertiary)', borderRadius: '0.4em', fontSize: '0.85em' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4em' }}>
+                                  <span>Pool Size: <strong>{attachments.length} files</strong></span>
+                                  <span>Sample Matches: <strong>{
+                                    bulkData.slice(0, 10).filter(row => {
+                                      const val = String(row[attachmentMappingCol] || '').trim().toLowerCase();
+                                      return val && attachments.some(f => {
+                                        const fn = f.name.toLowerCase();
+                                        return fn === val || fn.split('.').slice(0, -1).join('.') === val;
+                                      });
+                                    }).length
+                                  } / {Math.min(10, bulkData.length)}</strong></span>
+                                </div>
+                                <div style={{ fontSize: '0.8em', color: 'var(--text-tertiary)' }}>
+                                  Example: <span style={{ 
+                                    color: (bulkData[0]?.[attachmentMappingCol] && attachments.some(f => {
+                                      const fn = f.name.toLowerCase();
+                                      const val = String(bulkData[0][attachmentMappingCol]).toLowerCase().trim();
+                                      return fn === val || fn.split('.').slice(0, -1).join('.') === val;
+                                    })) ? 'inherit' : '#ef4444',
+                                    fontWeight: (bulkData[0]?.[attachmentMappingCol] && attachments.some(f => {
+                                      const fn = f.name.toLowerCase();
+                                      const val = String(bulkData[0][attachmentMappingCol]).toLowerCase().trim();
+                                      return fn === val || fn.split('.').slice(0, -1).join('.') === val;
+                                    })) ? 'normal' : '600'
+                                  }}>
+                                    {String(bulkData[0]?.[attachmentMappingCol] || 'Empty')}
+                                    {!(bulkData[0]?.[attachmentMappingCol] && attachments.some(f => {
+                                      const fn = f.name.toLowerCase();
+                                      const val = String(bulkData[0][attachmentMappingCol]).toLowerCase().trim();
+                                      return fn === val || fn.split('.').slice(0, -1).join('.') === val;
+                                    })) && ' (No Match)'}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       {detectedVariables.length > 0 && (
                         <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
                           <label>Variable Mapping</label>
