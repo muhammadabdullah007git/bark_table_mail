@@ -76,6 +76,22 @@ const App: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isBulkDragging, setIsBulkDragging] = useState(false);
 
+  // Attachment Strategy States
+  const [attachmentStrategy, setAttachmentStrategy] = useState<'auto' | 'range' | 'selective'>(
+    (loadSetting('mailman_att_strategy') as any) || 'auto'
+  );
+  const [attachmentRange, setAttachmentRange] = useState<{ from: number; to: number }>(() => {
+    try {
+      return JSON.parse(loadSetting('mailman_att_range') || '{"from":1,"to":1}');
+    } catch {
+      return { from: 1, to: 1 };
+    }
+  });
+  const [selectedAttachmentIndices, setSelectedAttachmentIndices] = useState<Set<number>>(new Set());
+  const [attachmentSort, setAttachmentSort] = useState<'time' | 'name'>(
+    (loadSetting('mailman_att_sort') as any) || 'time'
+  );
+
   // Bulk State
   const [bulkFile, setBulkFile] = useState<File | null>(null);
   const [bulkData, setBulkData] = useState<any[]>([]);
@@ -194,6 +210,18 @@ const App: React.FC = () => {
   useEffect(() => {
     saveSetting('mailman_att_mapping_col', attachmentMappingCol);
   }, [attachmentMappingCol]);
+
+  useEffect(() => {
+    saveSetting('mailman_att_strategy', attachmentStrategy);
+  }, [attachmentStrategy]);
+
+  useEffect(() => {
+    saveSetting('mailman_att_range', JSON.stringify(attachmentRange));
+  }, [attachmentRange]);
+
+  useEffect(() => {
+    saveSetting('mailman_att_sort', attachmentSort);
+  }, [attachmentSort]);
 
   useEffect(() => {
     const combinedText = `${to} ${cc} ${bcc} ${subject} ${body}`;
@@ -395,11 +423,67 @@ const App: React.FC = () => {
 
   const handleFile = (files: FileList | null) => {
     if (!files) return;
-    setAttachments(prev => [...prev, ...Array.from(files)]);
+    const newFiles = Array.from(files);
+    setAttachments(prev => {
+      const updated = [...prev, ...newFiles];
+      setSelectedAttachmentIndices(old => {
+        const next = new Set(old);
+        for (let i = prev.length; i < updated.length; i++) {
+          next.add(i);
+        }
+        return next;
+      });
+      return updated;
+    });
     showNotify(`${files.length} file(s) attached`, 'success');
   };
 
-  const removeAttachment = (index: number) => setAttachments(prev => prev.filter((_, i) => i !== index));
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      setSelectedAttachmentIndices(old => {
+        const next = new Set<number>();
+        old.forEach(idx => {
+          if (idx < index) {
+            next.add(idx);
+          } else if (idx > index) {
+            next.add(idx - 1);
+          }
+        });
+        return next;
+      });
+      return updated;
+    });
+  };
+
+  const getActiveAttachments = () => {
+    let pool = [...attachments];
+
+    if (attachmentSort === 'name') {
+      pool.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    if (attachmentStrategy === 'range') {
+      const from = Math.max(1, attachmentRange.from);
+      const to = Math.min(pool.length, attachmentRange.to);
+      if (from <= to) {
+        pool = pool.slice(from - 1, to);
+      } else {
+        pool = [];
+      }
+    } else if (attachmentStrategy === 'selective') {
+      pool = attachments
+        .map((file, originalIndex) => ({ file, originalIndex }))
+        .filter(({ originalIndex }) => selectedAttachmentIndices.has(originalIndex))
+        .map(({ file }) => file);
+      
+      if (attachmentSort === 'name') {
+        pool.sort((a, b) => a.name.localeCompare(b.name));
+      }
+    }
+
+    return pool;
+  };
 
   const formatWhatsAppPhone = (phone: string) => {
     let cleaned = phone.replace(/\D/g, '');
@@ -571,29 +655,36 @@ const App: React.FC = () => {
       const recipientTo = replaceVariables(to, row);
       
       // Attachment matching logic
-      let itemAttachments = [...attachments];
-      if (isBulk && attachmentMappingCol) {
-        const cellValue = String(row[attachmentMappingCol] || '').trim();
-        const targetFileName = cellValue.toLowerCase();
-        
-        if (targetFileName) {
-          // 1. Try exact match (case-insensitive)
-          // 2. Try matching filename without extension
-          const matchedFile = attachments.find(f => {
-            const fileName = f.name.toLowerCase();
-            const fileNameNoExt = fileName.split('.').slice(0, -1).join('.');
-            return fileName === targetFileName || fileNameNoExt === targetFileName;
-          });
+      const activePool = getActiveAttachments();
+      let itemAttachments = [...activePool];
 
-          if (matchedFile) {
-            itemAttachments = [matchedFile];
+      if (isBulk && attachmentMappingCol) {
+        if (attachmentMappingCol === '__sequential__') {
+          if (activePool.length > 0) {
+            itemAttachments = [activePool[dataIndex % activePool.length]];
           } else {
-            console.warn(`No attachment found matching: "${cellValue}"`);
-            itemAttachments = []; // Clear if column has value but no file matches
+            itemAttachments = [];
           }
         } else {
-          // If mapping column is set but cell is empty, default to ALL attachments in pool
-          itemAttachments = [...attachments];
+          const cellValue = String(row[attachmentMappingCol] || '').trim();
+          const targetFileName = cellValue.toLowerCase();
+          
+          if (targetFileName) {
+            const matchedFile = activePool.find(f => {
+              const fileName = f.name.toLowerCase();
+              const fileNameNoExt = fileName.split('.').slice(0, -1).join('.');
+              return fileName === targetFileName || fileNameNoExt === targetFileName;
+            });
+
+            if (matchedFile) {
+              itemAttachments = [matchedFile];
+            } else {
+              console.warn(`No attachment found matching: "${cellValue}"`);
+              itemAttachments = [];
+            }
+          } else {
+            itemAttachments = [...activePool];
+          }
         }
       }
 
@@ -1302,48 +1393,143 @@ const App: React.FC = () => {
                               <div className="var-label">File Matching Col</div>
                               <select className="col-select" value={attachmentMappingCol} onChange={e => setAttachmentMappingCol(e.target.value)}>
                                 <option value="">None (Send all pool)</option>
+                                <option value="__sequential__">NO/attachment box (Sequential)</option>
                                 {bulkColumns.map(col => <option key={col} value={col}>{col}</option>)}
                               </select>
                             </div>
-                            <p className="hint" style={{ marginTop: '0.4em' }}>If set, only files matching this column's value will be attached to that row.</p>
+                            <p className="hint" style={{ marginTop: '0.4em' }}>
+                              {attachmentMappingCol === '__sequential__' 
+                                ? 'Files will be attached sequentially (round-robin) to each row.' 
+                                : 'If set, only files matching this column\'s value will be attached to that row.'}
+                            </p>
                             
                             {attachmentMappingCol && bulkData.length > 0 && (
                               <div className="mapping-preview-status" style={{ marginTop: '0.8em', padding: '0.6em', backgroundColor: 'var(--bg-tertiary)', borderRadius: '0.4em', fontSize: '0.85em' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4em' }}>
-                                  <span>Pool Size: <strong>{attachments.length} files</strong></span>
-                                  <span>Sample Matches: <strong>{
-                                    bulkData.slice(0, 10).filter(row => {
-                                      const val = String(row[attachmentMappingCol] || '').trim().toLowerCase();
-                                      return val && attachments.some(f => {
-                                        const fn = f.name.toLowerCase();
-                                        return fn === val || fn.split('.').slice(0, -1).join('.') === val;
-                                      });
-                                    }).length
-                                  } / {Math.min(10, bulkData.length)}</strong></span>
-                                </div>
-                                <div style={{ fontSize: '0.8em', color: 'var(--text-tertiary)' }}>
-                                  Example: <span style={{ 
-                                    color: (bulkData[0]?.[attachmentMappingCol] && attachments.some(f => {
-                                      const fn = f.name.toLowerCase();
-                                      const val = String(bulkData[0][attachmentMappingCol]).toLowerCase().trim();
-                                      return fn === val || fn.split('.').slice(0, -1).join('.') === val;
-                                    })) ? 'inherit' : '#ef4444',
-                                    fontWeight: (bulkData[0]?.[attachmentMappingCol] && attachments.some(f => {
-                                      const fn = f.name.toLowerCase();
-                                      const val = String(bulkData[0][attachmentMappingCol]).toLowerCase().trim();
-                                      return fn === val || fn.split('.').slice(0, -1).join('.') === val;
-                                    })) ? 'normal' : '600'
-                                  }}>
-                                    {String(bulkData[0]?.[attachmentMappingCol] || 'Empty')}
-                                    {!(bulkData[0]?.[attachmentMappingCol] && attachments.some(f => {
-                                      const fn = f.name.toLowerCase();
-                                      const val = String(bulkData[0][attachmentMappingCol]).toLowerCase().trim();
-                                      return fn === val || fn.split('.').slice(0, -1).join('.') === val;
-                                    })) && ' (No Match)'}
-                                  </span>
-                                </div>
+                                {attachmentMappingCol === '__sequential__' ? (
+                                  <>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4em' }}>
+                                      <span>Pool Size: <strong>{getActiveAttachments().length} files</strong></span>
+                                      <span>Distribution: <strong>Sequential (Modulo)</strong></span>
+                                    </div>
+                                    <div style={{ fontSize: '0.85em', color: 'var(--text-secondary)' }}>
+                                      Example: Row 1 gets <strong>{getActiveAttachments()[0]?.name || '(No file in pool)'}</strong>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4em' }}>
+                                      <span>Pool Size: <strong>{getActiveAttachments().length} files</strong></span>
+                                      <span>Sample Matches: <strong>{
+                                        bulkData.slice(0, 10).filter(row => {
+                                          const val = String(row[attachmentMappingCol] || '').trim().toLowerCase();
+                                          return val && getActiveAttachments().some(f => {
+                                            const fn = f.name.toLowerCase();
+                                            return fn === val || fn.split('.').slice(0, -1).join('.') === val;
+                                          });
+                                        }).length
+                                      } / {Math.min(10, bulkData.length)}</strong></span>
+                                    </div>
+                                    <div style={{ fontSize: '0.8em', color: 'var(--text-tertiary)' }}>
+                                      Example: <span style={{ 
+                                        color: (bulkData[0]?.[attachmentMappingCol] && getActiveAttachments().some(f => {
+                                          const fn = f.name.toLowerCase();
+                                          const val = String(bulkData[0][attachmentMappingCol]).toLowerCase().trim();
+                                          return fn === val || fn.split('.').slice(0, -1).join('.') === val;
+                                        })) ? 'inherit' : '#ef4444',
+                                        fontWeight: (bulkData[0]?.[attachmentMappingCol] && getActiveAttachments().some(f => {
+                                          const fn = f.name.toLowerCase();
+                                          const val = String(bulkData[0][attachmentMappingCol]).toLowerCase().trim();
+                                          return fn === val || fn.split('.').slice(0, -1).join('.') === val;
+                                        })) ? 'normal' : '600'
+                                      }}>
+                                        {String(bulkData[0]?.[attachmentMappingCol] || 'Empty')}
+                                        {!(bulkData[0]?.[attachmentMappingCol] && getActiveAttachments().some(f => {
+                                          const fn = f.name.toLowerCase();
+                                          const val = String(bulkData[0][attachmentMappingCol]).toLowerCase().trim();
+                                          return fn === val || fn.split('.').slice(0, -1).join('.') === val;
+                                        })) && ' (No Match)'}
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
+                        <label>Attachment Strategy</label>
+                        <div className="count-control">
+                          <div className="mode-toggle">
+                            <button type="button" className={attachmentStrategy === 'auto' ? 'active' : ''} onClick={() => setAttachmentStrategy('auto')}>Auto</button>
+                            <button type="button" className={attachmentStrategy === 'range' ? 'active' : ''} onClick={() => setAttachmentStrategy('range')}>Range</button>
+                            <button type="button" className={attachmentStrategy === 'selective' ? 'active' : ''} onClick={() => setAttachmentStrategy('selective')}>Selective</button>
+                          </div>
+                          
+                          {attachmentStrategy === 'range' && (
+                            <div className="range-inputs">
+                              <div className="fixed-input-wrapper">
+                                <span className="label">From</span>
+                                <input type="number" value={attachmentRange.from} onChange={e => setAttachmentRange(prev => ({ ...prev, from: parseInt(e.target.value) || 1 }))} min="1" max={attachments.length} />
+                              </div>
+                              <div className="fixed-input-wrapper">
+                                <span className="label">To</span>
+                                <input type="number" value={attachmentRange.to} onChange={e => setAttachmentRange(prev => ({ ...prev, to: parseInt(e.target.value) || 1 }))} min="1" max={attachments.length} />
+                              </div>
+                            </div>
+                          )}
+
+                          {attachmentStrategy === 'selective' && (
+                            <div className="manual-selection-container" style={{ marginTop: '0.8em' }}>
+                              <div className="manual-header">
+                                <div style={{ fontSize: '0.85em', color: 'var(--text-secondary)' }}>Select Active Attachments</div>
+                                <button type="button" className="select-all-btn" onClick={() => {
+                                  if (selectedAttachmentIndices.size === attachments.length) {
+                                    setSelectedAttachmentIndices(new Set());
+                                  } else {
+                                    setSelectedAttachmentIndices(new Set(attachments.map((_, i) => i)));
+                                  }
+                                }}>
+                                  {selectedAttachmentIndices.size === attachments.length ? 'Deselect All' : 'Select All'}
+                                </button>
+                              </div>
+                              <div className="row-list" style={{ maxHeight: '120px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '0.4em' }}>
+                                {attachments.length === 0 ? (
+                                  <div style={{ padding: '0.8em', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.9em' }}>
+                                    No attachments uploaded
+                                  </div>
+                                ) : (
+                                  attachments.map((file, i) => (
+                                    <div key={i} className={`selectable-row ${selectedAttachmentIndices.has(i) ? 'selected' : ''}`} onClick={() => {
+                                      setSelectedAttachmentIndices(old => {
+                                        const next = new Set(old);
+                                        if (next.has(i)) next.delete(i);
+                                        else next.add(i);
+                                        return next;
+                                      });
+                                    }}>
+                                      <div className="checkbox-wrapper">
+                                        <div className={`checkbox ${selectedAttachmentIndices.has(i) ? 'checked' : ''}`} />
+                                      </div>
+                                      <div className="row-preview">
+                                        <span className="cell-preview" style={{ fontFamily: 'monospace' }}>{file.name}</span>
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className={`bulk-section ${!bulkActive ? 'disabled' : ''}`}>
+                        <label>Attachment Sort Mechanism</label>
+                        <div className="count-control">
+                          <div className="mode-toggle">
+                            <button type="button" className={attachmentSort === 'time' ? 'active' : ''} onClick={() => setAttachmentSort('time')}>Sort by Time</button>
+                            <button type="button" className={attachmentSort === 'name' ? 'active' : ''} onClick={() => setAttachmentSort('name')}>Sort by Name</button>
                           </div>
                         </div>
                       </div>
