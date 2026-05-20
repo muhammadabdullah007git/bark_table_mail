@@ -74,6 +74,7 @@ const App: React.FC = () => {
   const [attachmentMappingCol, setAttachmentMappingCol] = useState(loadSetting('mailman_att_mapping_col') || '');
   const [sending, setSending] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isBulkDragging, setIsBulkDragging] = useState(false);
 
   // Bulk State
   const [bulkFile, setBulkFile] = useState<File | null>(null);
@@ -1012,7 +1013,26 @@ const App: React.FC = () => {
           {(showPreview || showBulk || showWhatsAppList || showMailQueue) && (
             <>
               <div className={`resizer-handle ${isResizing ? 'active' : ''}`} onMouseDown={startResizing} />
-              <aside className="preview-panel" style={{ width: `${sidePanelWidth}px` }}>
+              <aside
+                className="preview-panel"
+                style={{ width: `${sidePanelWidth}px` }}
+                onDragEnter={(e) => {
+                  e.stopPropagation();
+                  setIsDragging(false);
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDragLeave={(e) => {
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragging(false);
+                }}
+              >
                 {currentPlatform === 'gmail' && showMailQueue ? (
                   <>
                     <div className="preview-header">
@@ -1239,7 +1259,28 @@ const App: React.FC = () => {
                           <label>Data Source</label>
                           {bulkFile && <span className="bulk-badge">{bulkData.length} Records</span>}
                         </div>
-                        <div className={`bulk-drop-zone ${bulkFile ? 'has-file' : ''}`} onClick={() => bulkFileInputRef.current?.click()} onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('dragging'); }} onDragLeave={(e) => e.currentTarget.classList.remove('dragging')} onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove('dragging'); if (e.dataTransfer.files?.[0]) processFile(e.dataTransfer.files[0]); }}>
+                        <div
+                          className={`bulk-drop-zone ${bulkFile ? 'has-file' : ''} ${isBulkDragging ? 'dragging' : ''}`}
+                          onClick={() => bulkFileInputRef.current?.click()}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsBulkDragging(true);
+                          }}
+                          onDragLeave={(e) => {
+                            e.stopPropagation();
+                            setIsBulkDragging(false);
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsDragging(false);
+                            setIsBulkDragging(false);
+                            if (e.dataTransfer.files?.[0]) {
+                              processFile(e.dataTransfer.files[0]);
+                            }
+                          }}
+                        >
                           <input type="file" ref={bulkFileInputRef} accept=".csv,.xlsx,.xls" onChange={(e) => { if (e.target.files?.[0]) { processFile(e.target.files[0]); e.target.value = ''; } }} style={{ display: 'none' }} />
                           {bulkFile ? (
                             <div className="file-info">

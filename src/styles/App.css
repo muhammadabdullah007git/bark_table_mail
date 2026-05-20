@@ -277,11 +277,12 @@ code,
   min-width: 300px;
 }
 
-.main-content.dragging {
+/* Disable full-app blue outline when dragging files */
+/* .main-content.dragging {
   background-color: var(--bg-tertiary);
   outline: 2px dashed var(--accent);
   outline-offset: -10px;
-}
+} */
 
 .form-fields {
   display: flex;
@@ -1014,6 +1015,12 @@ code,
   cursor: pointer;
   transition: all 0.2s;
   background-color: var(--bg-primary);
+}
+
+.bulk-drop-zone.dragging {
+  border-color: var(--accent);
+  background-color: var(--bg-tertiary);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .bulk-drop-zone.has-file {
