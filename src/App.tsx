@@ -31,7 +31,13 @@ interface MailQueueItem {
 
 type Platform = 'gmail' | 'whatsapp';
 
+const detectIsHtml = (text: string): boolean => {
+  const trimmed = text.trim();
+  return /^\s*<(!doctype|[a-z]+)/i.test(trimmed);
+};
+
 const App: React.FC = () => {
+
   // Persistence States
   const [theme, setTheme] = useState(loadSetting(THEME_KEY) || 'dark');
   const [uiFont, setUiFont] = useState(loadSetting(UI_FONT_KEY) || 'Inter');
@@ -235,6 +241,58 @@ const App: React.FC = () => {
       editorRef.current.innerHTML = body;
     }
   }, [isSourceMode]);
+
+  // Auto-switch mode based on initial body content on mount
+  useEffect(() => {
+    if (body) {
+      const isHtml = detectIsHtml(body);
+      if (isHtml && !isSourceMode) {
+        setIsSourceMode(true);
+      } else if (!isHtml && isSourceMode) {
+        setIsSourceMode(false);
+      }
+    }
+  }, []);
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    if (currentPlatform === 'whatsapp') return;
+
+    const pastedText = e.clipboardData.getData('text/plain');
+    if (!pastedText) return;
+
+    const isHtml = detectIsHtml(pastedText);
+
+    if (isHtml && !isSourceMode) {
+      e.preventDefault();
+      setIsSourceMode(true);
+      setBody(pastedText);
+      setTimeout(() => {
+        const textarea = document.querySelector('.source-editor') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+          textarea.selectionStart = textarea.selectionEnd = pastedText.length;
+        }
+      }, 50);
+    } else if (!isHtml && isSourceMode) {
+      e.preventDefault();
+      setIsSourceMode(false);
+      const htmlText = pastedText.replace(/\n/g, '<br>');
+      setBody(htmlText);
+      setTimeout(() => {
+        const richEditor = document.querySelector('.rich-editor') as HTMLDivElement;
+        if (richEditor) {
+          richEditor.focus();
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(richEditor);
+          range.collapse(false);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        }
+      }, 50);
+    }
+  };
+
 
   const showNotify = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setNotification({ message, type });
@@ -1039,10 +1097,11 @@ const App: React.FC = () => {
 
                   </div>
                   {!isSourceMode ? (
-                    <div className="rich-editor" contentEditable={true} ref={editorRef} onInput={updateBody} onBlur={updateBody} data-placeholder="Start typing..." />
+                    <div className="rich-editor" contentEditable={true} ref={editorRef} onInput={updateBody} onBlur={updateBody} onPaste={handlePaste} data-placeholder="Start typing..." />
                   ) : (
-                    <textarea className="source-editor" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Enter raw HTML here..." />
+                    <textarea className="source-editor" value={body} onChange={(e) => setBody(e.target.value)} onPaste={handlePaste} placeholder="Enter raw HTML here..." />
                   )}
+
                 </>
               ) : (
                 <div className="whatsapp-editor-wrapper">

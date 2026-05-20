@@ -35,6 +35,17 @@ code,
   user-select: text;
 }
 
+/* Custom selection highlight color using the theme's accent color */
+::selection {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+::-moz-selection {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+
 /* Sidebar - Now Scales with UI Size */
 .sidebar {
   width: 4.5em;
