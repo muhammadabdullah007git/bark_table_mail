@@ -2,7 +2,6 @@
 
 A minimalist, high-performance multi-platform messaging and bulk-mailing client inspired by the `zed.dev` design language. Built for speed, precision, and technical users.
 
-![Design Aesthetic](https://img.shields.io/badge/Design-Zed.dev-blue)
 ![Platforms](https://img.shields.io/badge/Platforms-Gmail%20%7C%20WhatsApp-green)
 ![Theme](https://img.shields.io/badge/Theme-Pure%20Black%20%2F%20Off--white%20%2F%20One%20Dark-black)
 
